@@ -54,6 +54,11 @@
 }
 .bp-tab.active{background:var(--ink);color:#fff;}
 .bp-tab:not(.active):hover{background:var(--orange-tint);color:var(--orange-dark);}
+.bp-drive-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:#EEF3FC;border:1px solid #C9DAF5;border-radius:11px;padding:8px 14px;margin-bottom:10px;
+  font-size:11.5px;color:#2A4C8C;
+}
 .bp-backup-bar{
   display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
   background:var(--orange-tint);border:1px solid #F5CDB0;border-radius:11px;padding:8px 14px;margin-bottom:16px;
@@ -211,6 +216,7 @@
 <div id="bp-app"><div class="bp-loading">Carregando…</div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <script>
 (function(){
 
@@ -247,11 +253,18 @@ function normalizeKanbanValue(v){
   return 'not_started';
 }
 
-let state = { tasks: [], meetings: [], leaders: [], observations: [], trash: [], tabOrder: DEFAULT_TAB_ORDER.slice(), labels: DEFAULT_LABELS, tab: 'kanban', activeLeaderId: null, search: '' };
+let state = { tasks: [], meetings: [], leaders: [], observations: [], trash: [], tabOrder: DEFAULT_TAB_ORDER.slice(), labels: DEFAULT_LABELS, tab: 'kanban', activeLeaderId: null, search: '', backupBarCollapsed: false };
 const uid = (p) => p + Math.random().toString(36).slice(2,9);
 const todayISO = () => new Date().toISOString().slice(0,10);
 const nowISODateTime = () => new Date().toISOString();
 const TRASH_RETENTION_DAYS = 30;
+
+const GOOGLE_CLIENT_ID = '256391982889-5cl1m9alf4koe2f4b7ssk8iqb2508fg1.apps.googleusercontent.com';
+const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
+const DRIVE_FILE_NAME = 'agenda_bp_dados.json';
+let driveAuth = { token: null, expiresAt: 0, fileId: null, email: null, syncing: false, lastSyncAt: null, connected: false, tokenClient: null };
+let suppressDrivePush = false;
+let syncDebounceTimer = null;
 
 let storageAvailable = true;
 function safeGet(key){
@@ -287,11 +300,13 @@ async function loadState(){
   if(!state.tabOrder.includes(state.tab)) state.tab = state.tabOrder[0];
   const savedLabels = await getOrSeed('bp_labels', null);
   state.labels = mergeLabels(savedLabels);
+  state.backupBarCollapsed = safeGet('bp_backup_bar_collapsed') === '1';
   if(state.leaders.length) state.activeLeaderId = state.leaders[0].id;
 }
 async function persist(key){
   const map = {bp_tasks:state.tasks, bp_meetings:state.meetings, bp_leaders:state.leaders, bp_observations:state.observations, bp_trash:state.trash, bp_tab_order:state.tabOrder, bp_labels:state.labels};
   safeSet(key, JSON.stringify(map[key]));
+  if(!suppressDrivePush) schedulePush();
 }
 
 function moveToTrash(type, payload, label){
@@ -330,11 +345,22 @@ function render(){
           <button class="bp-tab-reorder" id="bp-reorder-btn" title="Reordenar abas">⋮⋮</button>
         </div>
       </div>
+      <div class="bp-drive-bar">
+        <span id="bp-drive-status">${driveStatusLabel()}</span>
+        ${driveAuth.connected
+          ? '<button class="bp-btn ghost sm" id="bp-google-logout">Sair</button>'
+          : '<button class="bp-btn orange sm" id="bp-google-login">🔐 Entrar com Google</button>'}
+      </div>
       <div class="bp-backup-bar">
-        <span class="bp-backup-hint">${storageAvailable ? esc(state.labels.backupHint) : '⚠ Este navegador está bloqueando o salvamento local — nada será salvo ao fechar a aba. Exporte um backup ao final da sessão.'}</span>
-        <div class="bp-backup-actions">
+        ${state.backupBarCollapsed ? '' : `
+        <div style="flex:1;min-width:220px;">
+          <div class="bp-backup-hint">${storageAvailable ? esc(state.labels.backupHint) : '⚠ Este navegador está bloqueando o salvamento local — nada será salvo ao fechar a aba. Exporte um backup ao final da sessão.'}</div>
+          <div class="bp-backup-hint" id="bp-last-export" style="margin-top:2px;">${lastExportLabel()}</div>
+        </div>`}
+        <div class="bp-backup-actions" ${state.backupBarCollapsed ? 'style="margin-left:auto;"' : ''}>
           <button class="bp-btn ghost sm" id="bp-export-btn">${esc(state.labels.exportBtn)}</button>
           <button class="bp-btn ghost sm" id="bp-import-btn">${esc(state.labels.importBtn)}</button>
+          <button class="bp-btn ghost sm" id="bp-backup-toggle" title="${state.backupBarCollapsed ? 'Mostrar detalhes' : 'Ocultar detalhes'}">${state.backupBarCollapsed ? '▾' : '▴'}</button>
           <input type="file" id="bp-import-file" accept=".xlsx,.json" style="display:none;">
         </div>
       </div>
@@ -344,11 +370,20 @@ function render(){
   root.querySelectorAll('.bp-tab').forEach(b=>b.addEventListener('click', ()=>{state.tab=b.dataset.tab; render();}));
   root.querySelector('#bp-labels-btn').addEventListener('click', openLabelsModal);
   root.querySelector('#bp-reorder-btn').addEventListener('click', openReorderModal);
+  const loginBtn = root.querySelector('#bp-google-login');
+  if(loginBtn) loginBtn.addEventListener('click', handleGoogleLogin);
+  const logoutBtn = root.querySelector('#bp-google-logout');
+  if(logoutBtn) logoutBtn.addEventListener('click', handleGoogleLogout);
   root.querySelector('#bp-export-btn').addEventListener('click', exportBackup);
   const importInput = root.querySelector('#bp-import-file');
   root.querySelector('#bp-import-btn').addEventListener('click', ()=>importInput.click());
   importInput.addEventListener('change', (e)=>{
     if(e.target.files && e.target.files[0]) importBackupFile(e.target.files[0]);
+  });
+  root.querySelector('#bp-backup-toggle').addEventListener('click', ()=>{
+    state.backupBarCollapsed = !state.backupBarCollapsed;
+    safeSet('bp_backup_bar_collapsed', state.backupBarCollapsed ? '1' : '0');
+    render();
   });
   const view = document.getElementById('bp-view');
   if(state.tab==='kanban') renderKanban(view);
@@ -977,6 +1012,20 @@ function exportBackup(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(normalizeRows(trashRows, TRASH_FIELDS)), 'Lixeira');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{exportedAt:new Date().toISOString(), tabOrder: state.tabOrder.join(',')}]), 'Meta');
   XLSX.writeFile(wb, `agenda_bp_backup_${todayISO()}.xlsx`);
+  registerExportTimestamp();
+}
+
+function registerExportTimestamp(){
+  safeSet('bp_last_export', new Date().toISOString());
+  const el = document.getElementById('bp-last-export');
+  if(el) el.textContent = lastExportLabel();
+}
+
+function lastExportLabel(){
+  const raw = safeGet('bp_last_export');
+  if(!raw) return 'Nenhum backup exportado ainda — exporte antes de trocar de computador ou navegador.';
+  const d = new Date(raw);
+  return `Último backup exportado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}.`;
 }
 
 function exportBackupJSON(){
@@ -991,6 +1040,7 @@ function exportBackupJSON(){
   a.href = url; a.download = `agenda_bp_backup_${todayISO()}.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  registerExportTimestamp();
 }
 
 function coerceBool(v){ return v===true || v==='TRUE' || v==='true' || v===1 || v==='1'; }
@@ -1063,7 +1113,197 @@ function importBackupFile(file){
   }
 }
 
+/* ---------- GOOGLE LOGIN + SINCRONIZAÇÃO COM DRIVE ---------- */
+function initGoogleAuth(){
+  if(typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2){
+    console.warn('Google Identity Services não carregou.');
+    return;
+  }
+  driveAuth.tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: DRIVE_SCOPES,
+    callback: () => {}
+  });
+}
+
+function requestAccessToken(interactive){
+  return new Promise((resolve, reject)=>{
+    if(!driveAuth.tokenClient){ reject(new Error('Login do Google indisponível.')); return; }
+    driveAuth.tokenClient.callback = (resp)=>{
+      if(resp.error){ reject(resp); return; }
+      driveAuth.token = resp.access_token;
+      driveAuth.expiresAt = Date.now() + (Number(resp.expires_in||3600) * 1000);
+      resolve(resp.access_token);
+    };
+    driveAuth.tokenClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+  });
+}
+
+async function driveApiFetch(url, options){
+  options = options || {};
+  const headers = Object.assign({}, options.headers||{}, { 'Authorization': 'Bearer ' + driveAuth.token });
+  const res = await fetch(url, Object.assign({}, options, { headers }));
+  if(res.status === 401){
+    driveAuth.token = null; driveAuth.connected = false;
+    throw new Error('Sessão do Google expirou. Faça login novamente.');
+  }
+  if(!res.ok){
+    const text = await res.text().catch(()=>'');
+    throw new Error('Erro na API do Drive ('+res.status+'): '+text);
+  }
+  return res;
+}
+
+async function fetchUserInfo(){
+  const res = await driveApiFetch('https://www.googleapis.com/oauth2/v3/userinfo');
+  const data = await res.json();
+  driveAuth.email = data.email || null;
+}
+
+async function driveFindFile(){
+  const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
+  const res = await driveApiFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)`);
+  const data = await res.json();
+  return (data.files && data.files[0]) || null;
+}
+
+async function driveReadFile(fileId){
+  const res = await driveApiFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+  const text = await res.text();
+  try{ return JSON.parse(text); }catch(e){ return null; }
+}
+
+async function driveCreateFile(payload){
+  const boundary = 'bpboundary' + Date.now();
+  const metadata = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(payload)}\r\n` +
+    `--${boundary}--`;
+  const res = await driveApiFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body
+  });
+  return res.json();
+}
+
+async function driveUpdateFile(fileId, payload){
+  const res = await driveApiFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+function buildSyncPayload(){
+  return {
+    _tipo: 'agenda_bp_drive_sync', _versao: 1, syncedAt: new Date().toISOString(),
+    tasks: state.tasks, meetings: state.meetings, leaders: state.leaders,
+    observations: state.observations, trash: state.trash, tabOrder: state.tabOrder, labels: state.labels
+  };
+}
+
+async function applyDriveState(remote){
+  if(!remote || !Array.isArray(remote.tasks)) return;
+  suppressDrivePush = true;
+  state.tasks = remote.tasks;
+  state.tasks.forEach(t=>{ t.kanban = normalizeKanbanValue(t.kanban); });
+  state.meetings = remote.meetings || [];
+  state.leaders = remote.leaders || [];
+  state.leaders.forEach(l=>{ if(typeof l.notes !== 'string') l.notes = ''; });
+  state.observations = remote.observations || [];
+  state.trash = remote.trash || [];
+  if(Array.isArray(remote.tabOrder) && remote.tabOrder.length){
+    state.tabOrder = remote.tabOrder.filter(k=>TAB_KEYS.includes(k));
+    TAB_KEYS.forEach(k=>{ if(!state.tabOrder.includes(k)) state.tabOrder.push(k); });
+  }
+  if(remote.labels) state.labels = mergeLabels(remote.labels);
+  await persist('bp_tasks'); await persist('bp_meetings'); await persist('bp_leaders');
+  await persist('bp_observations'); await persist('bp_trash'); await persist('bp_tab_order'); await persist('bp_labels');
+  state.activeLeaderId = state.leaders.length ? state.leaders[0].id : null;
+  if(!state.tabOrder.includes(state.tab)) state.tab = state.tabOrder[0];
+  suppressDrivePush = false;
+}
+
+async function driveInitialSync(){
+  const file = await driveFindFile();
+  if(file){
+    driveAuth.fileId = file.id;
+    const remote = await driveReadFile(file.id);
+    await applyDriveState(remote);
+  } else {
+    const created = await driveCreateFile(buildSyncPayload());
+    driveAuth.fileId = created.id;
+  }
+  driveAuth.lastSyncAt = new Date().toISOString();
+}
+
+function schedulePush(){
+  if(!driveAuth.token || !driveAuth.fileId) return;
+  clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(pushToDrive, 900);
+}
+
+async function pushToDrive(){
+  if(!driveAuth.token || !driveAuth.fileId) return;
+  driveAuth.syncing = true;
+  updateSyncBadge();
+  try{
+    await driveUpdateFile(driveAuth.fileId, buildSyncPayload());
+    driveAuth.lastSyncAt = new Date().toISOString();
+  }catch(e){
+    console.error('Falha ao sincronizar com o Drive', e);
+  } finally {
+    driveAuth.syncing = false;
+    updateSyncBadge();
+  }
+}
+
+function updateSyncBadge(){
+  const el = document.getElementById('bp-drive-status');
+  if(el) el.textContent = driveStatusLabel();
+}
+
+function driveStatusLabel(){
+  if(!driveAuth.connected) return 'Não conectado — dados salvos só neste navegador.';
+  if(driveAuth.syncing) return `Conectado como ${driveAuth.email} · sincronizando…`;
+  if(driveAuth.lastSyncAt){
+    const d = new Date(driveAuth.lastSyncAt);
+    return `Conectado como ${driveAuth.email} · sincronizado às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+  }
+  return `Conectado como ${driveAuth.email}`;
+}
+
+async function handleGoogleLogin(){
+  const btn = document.getElementById('bp-google-login');
+  if(btn){ btn.disabled = true; btn.textContent = 'Conectando…'; }
+  try{
+    await requestAccessToken(true);
+    await fetchUserInfo();
+    driveAuth.connected = true;
+    render();
+    await driveInitialSync();
+    updateSyncBadge();
+  }catch(e){
+    console.error(e);
+    driveAuth.connected = false;
+    alert('Não foi possível conectar ao Google. Tente novamente.');
+    render();
+  }
+}
+
+function handleGoogleLogout(){
+  if(driveAuth.token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2){
+    try{ google.accounts.oauth2.revoke(driveAuth.token, ()=>{}); }catch(e){}
+  }
+  driveAuth = { token: null, expiresAt: 0, fileId: null, email: null, syncing: false, lastSyncAt: null, connected: false, tokenClient: driveAuth.tokenClient };
+  render();
+}
+
 /* ---------- INIT ---------- */
+initGoogleAuth();
 loadState().then(render);
 })();
 </script>
