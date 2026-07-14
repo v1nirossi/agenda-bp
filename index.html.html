@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda BP · nstech</title>
+</head>
+<body>
+<style>
+:root{
+  --ink:#1B1B1F;
+  --ink-soft:#4A4A50;
+  --ink-faint:#8A8A90;
+  --paper:#FAF9F7;
+  --card:#FFFFFF;
+  --line:#E7E4DF;
+  --orange:#F0631A;
+  --orange-dark:#C94E10;
+  --orange-tint:#FDE9DD;
+  --red:#D64545;
+  --red-tint:#FBE7E7;
+  --amber:#C98A1A;
+  --amber-tint:#FBF0DC;
+  --green:#3E8E5A;
+  --green-tint:#E4F3EA;
+  --radius:14px;
+}
+*{box-sizing:border-box;}
+#bp-app{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  padding:0;
+  font-size:14px;
+  line-height:1.45;
+}
+.bp-shell{max-width:1180px;margin:0 auto;padding:20px 20px 60px;}
+.bp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.bp-title{display:flex;align-items:center;gap:10px;}
+.bp-corner{
+  width:30px;height:30px;background:var(--orange);
+  clip-path:polygon(0 0, 100% 0, 100% 100%);
+  border-radius:6px 6px 6px 0;
+  flex:none;
+}
+.bp-title h1{font-size:18px;font-weight:700;margin:0;letter-spacing:-0.01em;}
+.bp-title p{margin:0;font-size:12px;color:var(--ink-faint);}
+.bp-tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;}
+.bp-tab{
+  border:none;background:transparent;padding:8px 14px;border-radius:9px;
+  font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+  transition:background .15s, color .15s;
+}
+.bp-tab.active{background:var(--ink);color:#fff;}
+.bp-tab:not(.active):hover{background:var(--orange-tint);color:var(--orange-dark);}
+.bp-backup-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:var(--orange-tint);border:1px solid #F5CDB0;border-radius:11px;padding:8px 14px;margin-bottom:16px;
+}
+.bp-backup-hint{font-size:11.5px;color:var(--orange-dark);}
+.bp-backup-actions{display:flex;gap:8px;flex:none;}
+.bp-btn.sm{padding:6px 11px;font-size:12px;background:#fff;}
+.bp-tab-reorder{
+  border:none;background:transparent;color:var(--ink-faint);cursor:pointer;
+  padding:8px 10px;border-radius:9px;font-size:13px;letter-spacing:-1px;
+}
+.bp-tab-reorder:hover{background:var(--orange-tint);color:var(--orange-dark);}
+.bp-reorder-row{
+  display:flex;align-items:center;justify-content:space-between;background:var(--paper);
+  border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:8px;
+}
+.bp-reorder-row .nm{font-size:13px;font-weight:600;}
+.bp-reorder-row .arrows{display:flex;gap:6px;}
+.bp-reorder-row .arrows button{
+  border:1px solid var(--line);background:#fff;border-radius:7px;width:26px;height:26px;
+  cursor:pointer;font-size:12px;color:var(--ink-soft);
+}
+.bp-reorder-row .arrows button:disabled{opacity:.3;cursor:default;}
+.bp-reorder-row .arrows button:not(:disabled):hover{background:var(--orange-tint);color:var(--orange-dark);}
+.bp-obs-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px;margin-bottom:10px;cursor:pointer;}
+.bp-obs-card:hover{border-color:var(--orange);}
+.bp-obs-date{font-size:11px;font-weight:700;color:var(--ink-faint);margin-bottom:4px;}
+.bp-obs-text{font-size:13px;white-space:pre-wrap;}
+.bp-trash-row{
+  display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:11px;padding:10px 13px;margin-bottom:7px;
+}
+.bp-trash-main{flex:1;min-width:0;}
+.bp-trash-main .t{font-size:13px;font-weight:600;}
+.bp-trash-main .s{font-size:11px;color:var(--ink-faint);}
+.bp-trash-actions{display:flex;gap:6px;flex:none;}
+.bp-trash-type{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--line);color:var(--ink-soft);flex:none;text-transform:uppercase;}
+
+/* Toolbar */
+.bp-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.bp-search{
+  flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;
+  font-size:13px;background:var(--card);
+}
+.bp-btn{
+  border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  background:var(--ink);color:#fff;transition:opacity .15s;
+}
+.bp-btn:hover{opacity:.85;}
+.bp-btn.orange{background:var(--orange);}
+.bp-btn.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+
+/* Kanban */
+.bp-board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media (max-width:820px){.bp-board{grid-template-columns:1fr;}}
+.bp-col{background:transparent;}
+.bp-col-drop{min-height:40px;border-radius:12px;transition:background .12s;}
+.bp-col.drag-over .bp-col-drop{background:var(--orange-tint);outline:2px dashed var(--orange);outline-offset:4px;}
+.bp-card.dragging{opacity:.4;}
+.bp-col-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;}
+.bp-col-head h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:0;font-weight:700;}
+.bp-count{background:var(--line);color:var(--ink-soft);font-size:11px;font-weight:700;border-radius:20px;padding:1px 8px;}
+.bp-card{
+  position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:13px 13px 11px;margin-bottom:10px;cursor:grab;overflow:hidden;
+  transition:box-shadow .15s, transform .15s;
+}
+.bp-card:active{cursor:grabbing;}
+.bp-card:hover{box-shadow:0 4px 14px rgba(27,27,31,.08);transform:translateY(-1px);}
+.bp-card::before{
+  content:"";position:absolute;top:0;left:0;width:16px;height:16px;
+  background:var(--card-accent,var(--orange));
+  clip-path:polygon(0 0,100% 0,0 100%);
+}
+.bp-card-title{font-size:13.5px;font-weight:700;margin:2px 0 6px;padding-left:2px;}
+.bp-card-context{font-size:11.5px;color:var(--ink-faint);margin-bottom:8px;}
+.bp-badge{
+  display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
+  padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;
+}
+.bp-badge.atrasado{background:var(--red-tint);color:var(--red);}
+.bp-badge.hoje{background:var(--amber-tint);color:var(--amber);}
+.bp-badge.prazo{background:var(--green-tint);color:var(--green);}
+.bp-badge.sem-data{background:var(--line);color:var(--ink-faint);}
+.bp-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px;}
+.bp-card-owner{font-size:11px;color:var(--ink-faint);}
+.bp-empty{border:1.5px dashed var(--line);border-radius:var(--radius);padding:22px 12px;text-align:center;color:var(--ink-faint);font-size:12.5px;}
+
+/* Leaders */
+.bp-leader-grid{display:grid;grid-template-columns:260px 1fr;gap:16px;}
+@media (max-width:760px){.bp-leader-grid{grid-template-columns:1fr;}}
+.bp-leader-list{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:8px;max-height:70vh;overflow:auto;}
+.bp-leader-item{
+  display:flex;justify-content:space-between;align-items:center;padding:10px 10px;border-radius:10px;cursor:pointer;margin-bottom:2px;
+}
+.bp-leader-item:hover{background:var(--orange-tint);}
+.bp-leader-item.active{background:var(--ink);color:#fff;}
+.bp-leader-item .nm{font-size:13px;font-weight:600;}
+.bp-leader-item .ct{font-size:10.5px;opacity:.6;background:var(--line);border-radius:20px;padding:1px 7px;}
+.bp-leader-item.active .ct{background:rgba(255,255,255,.2);color:#fff;}
+.bp-leader-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;min-height:70vh;}
+.bp-leader-panel-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+.bp-leader-panel-head h2{margin:0 0 3px;font-size:17px;}
+.bp-leader-panel-head .meta{font-size:12px;color:var(--ink-faint);}
+.bp-timeline{position:relative;padding-left:18px;}
+.bp-timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line);}
+.bp-tl-item{position:relative;margin-bottom:16px;}
+.bp-tl-item::before{
+  content:"›";position:absolute;left:-18px;top:-2px;width:14px;height:14px;
+  color:#fff;background:var(--orange);border-radius:50%;font-size:10px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+}
+.bp-tl-item.done::before{background:var(--green);content:"✓";}
+.bp-tl-card{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:11px 13px;}
+.bp-tl-context{font-size:13px;margin:0 0 6px;white-space:pre-wrap;}
+.bp-tl-next{font-size:12px;color:var(--ink-soft);background:var(--orange-tint);border-radius:8px;padding:7px 10px;white-space:pre-wrap;}
+.bp-tl-next b{color:var(--orange-dark);}
+.bp-tl-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.bp-tl-actions{display:flex;gap:8px;}
+.bp-tl-actions button{background:none;border:none;font-size:11px;color:var(--ink-faint);cursor:pointer;text-decoration:underline;}
+
+/* Agenda */
+.bp-agenda-group{margin-bottom:20px;}
+.bp-agenda-group h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:0 0 8px;}
+.bp-agenda-row{
+  display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:11px;padding:10px 13px;margin-bottom:7px;cursor:pointer;
+}
+.bp-agenda-row:hover{border-color:var(--orange);}
+.bp-agenda-date{font-size:11px;font-weight:700;color:var(--ink-faint);width:78px;flex:none;}
+.bp-agenda-main{flex:1;min-width:0;}
+.bp-agenda-main .t{font-size:13px;font-weight:600;}
+.bp-agenda-main .s{font-size:11.5px;color:var(--ink-faint);}
+.bp-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--line);color:var(--ink-soft);flex:none;}
+.bp-tag.tarefa{background:#E4E9F5;color:#31519E;}
+.bp-tag.reuniao{background:var(--orange-tint);color:var(--orange-dark);}
+
+/* Modal */
+.bp-overlay{position:fixed;inset:0;background:rgba(27,27,31,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.bp-modal{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;max-height:88vh;overflow:auto;}
+.bp-modal h3{margin:0 0 14px;font-size:15px;}
+.bp-field{margin-bottom:12px;}
+.bp-field label{display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em;}
+.bp-field input, .bp-field select, .bp-field textarea{
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-family:inherit;background:var(--paper);
+}
+.bp-field textarea{min-height:70px;resize:vertical;}
+.bp-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+.bp-modal-actions .danger{color:var(--red);background:none;border:none;font-size:12px;cursor:pointer;margin-right:auto;}
+.bp-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.bp-note{font-size:11.5px;color:var(--ink-faint);background:var(--orange-tint);border-radius:9px;padding:8px 10px;margin-bottom:14px;}
+.bp-loading{padding:60px;text-align:center;color:var(--ink-faint);font-size:13px;}
+</style>
+
+<div id="bp-app"><div class="bp-loading">Carregando…</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+
+const SEED = {"tasks": [{"id": "t1", "owner": "Vinícius Rossi", "context": "José Agnaldo", "title": "falar sobre José Agnaldo", "description": "Caso do José Agnaldo, verificar a que pé andas. Afastado pelo INSS, pega o time da Salu e segurança do trabalho. Quando a pessoa volta ela precisa passar por uma perícia médica, e uma vez que o inss fala apto isso vai para a segurança do trabalho e depois vai para a salu e eles nos retornam quando ele volta. Chamar a Simone, qual o circuito, quando ela pega, oq ela precisa fazer, quais as áreas que passam e como que funciona, quero construir esse mapa e como a gente fica sabendo..", "deadline": "2026-07-01", "kanban": "Em andamento"}, {"id": "t2", "owner": "Vinícius Rossi", "context": "Vinícius Spode", "title": "Time comercial, Jeison. Trocar ideia", "description": "Chamar Spode para conversar sobre Jeison, time comercial e tudo mais. Antes de acionar outra área, classificar a demanda: é urgente de verdade ou urgente para mim?\n\nTreinar a abertura de pedidos com contexto e prazo flexível - não apenas urgência;\n\nPraticar aceitar \"espera\" como resposta válida e negociar prazos;\n \nSubstituir \"críticas\" a outros setores por perguntas: \"Como posso ajudar a agilizar isso?\"", "deadline": "2026-07-07", "kanban": "Não iniciado"}, {"id": "t3", "owner": "Vinícius Rossi", "context": "Vinícius Rossi", "title": "Desequiparação salarial área tech", "description": "Criar comparativo de cargos e salários sobre toda a área tech para analisar desequiparação", "deadline": "2026-07-01", "kanban": "Não iniciado"}, {"id": "t4", "owner": "Vinícius Rossi", "context": "Passar esse contexto para a Bia. Calita está por dentro", "title": "End User Chapecó", "description": "Pegar o contexto do enduser de chapecó time do blanco, pegar com a calita e repassar para o gui esse contexto..", "deadline": "2026-06-22", "kanban": "Não iniciado"}, {"id": "t5", "owner": "Vinícius Rossi", "context": "André Justo", "title": "Desligamento funcionário do André Justo", "description": "Desligamento Leonardo Lima Regassio - Funcionário do André Justo", "deadline": "2026-07-01", "kanban": "Em andamento"}, {"id": "t6", "owner": "Vinícius Rossi", "context": "Vinícius Rossi", "title": "Aniversariantes do mês", "description": "Mandar na agenda aniversariantes do mês e fazer pedido", "deadline": "2026-07-15", "kanban": "Não iniciado"}, {"id": "t7", "owner": "Vinícius Rossi", "context": "André Justo/Leonardo Lima", "title": "Desligamento do Leonardo Lima ou Realocação", "description": "Leonardo Lima, funcionário do André Justo será mantido até 30/07", "deadline": "2026-07-27", "kanban": "Em andamento"}], "meetings": [{"id": "m1", "leader": "DIEGO ANDERSON SCHROEDER", "context": "Realizamos um desligamento o qual o colaborador Rafael Andrade da Silva comentou que não tinha recebido um feedback estruturado.", "nextSteps": "Criar um mapeamento com o Diego e uma rotina de acompanhamento proximal com os casos mais críticos do time dele, definindo periodicidade e quais são os pontos de melhoria", "done": false}, {"id": "m2", "leader": "MARCEL MELO DA SILVA", "context": "Quer dar o mérito para a Ivena", "nextSteps": "05/08 Tabata submeteu no comitê de aprovação de 15% de mérito", "done": false}, {"id": "m3", "leader": "HANIEL GARCIA", "context": "Quer abrir uma susbtituição do Daniel Zanoni que saiu no ano passado", "nextSteps": "Tabata retornou 05/08/2025 que não é possível pois o ID já foi utilizado", "done": true}, {"id": "m4", "leader": "FIORAVANTE MANFRON", "context": "Quando for mudar o Ivan Ribeiro de Jesus precisamos trazer no histórico de que é adequação de cargo e atividades", "nextSteps": "", "done": true}, {"id": "m5", "leader": "FIORAVANTE MANFRON", "context": "Precisamos desligar o José do ID que o Heder irá utilizar", "nextSteps": "", "done": true}, {"id": "m6", "leader": "FIORAVANTE MANFRON", "context": "Nós teremos o desligamento de uma pessoa Alan. Mas ele não tem conseguido performar com as pessoas.\nTem um feedback com ele na semana que vem (08/09).  Da parte do Fioravante não há duvidas da permanencia do Alan", "nextSteps": "", "done": false}, {"id": "m7", "leader": "FIORAVANTE MANFRON", "context": "Hoje o Fiora tem um padrão de treinamento inicial para novas pessoas. Será que não conseguimos", "nextSteps": "Entender melhor como é esse onboarding", "done": false}, {"id": "m8", "leader": "GUSTAVO PEREIRA TRUDES", "context": "Vai me mandar acesso a página", "nextSteps": "", "done": false}, {"id": "m9", "leader": "GUSTAVO PEREIRA TRUDES", "context": "Heder tem uma série de vídeos feitos para o Adriano", "nextSteps": "", "done": false}, {"id": "m10", "leader": "GUSTAVO PEREIRA TRUDES", "context": "Trouxe demanda de transferir o MAICOL WEIS", "nextSteps": "", "done": false}, {"id": "m11", "leader": "GUSTAVO PEREIRA TRUDES", "context": "PEDRO PAULO VASCONCELOS CHAVES - Hoje ele está como Analista de Requisitos, mas atua como PO", "nextSteps": "", "done": false}, {"id": "m12", "leader": "IVENA VIEIRA AGUIAR", "context": "Hoje tem percebido que tá com dificuldade com a falta de organização (processos não bem documentados).\nO time ficou 20 dias sem fazer rituais de documentação", "nextSteps": "Hoje a Ivena acaba tendo um dia a dia muito operacional devido ao seu perfil + voltado ao controle", "done": false}, {"id": "m13", "leader": "IVENA VIEIRA AGUIAR", "context": "Hoje ela precisa provar que o time tá fazendo sentido (devido ao investimento feito para esse time)", "nextSteps": "", "done": false}, {"id": "m14", "leader": "IVENA VIEIRA AGUIAR", "context": "Ela vai marcar 1:1 com novos entrantes\nGUI> será que não faz sentido criarmos uma FAQ das principais dificuldades", "nextSteps": "", "done": false}, {"id": "m15", "leader": "IVENA VIEIRA AGUIAR", "context": "Ela não tem conhecimento de um Hub Spot", "nextSteps": "", "done": false}, {"id": "m16", "leader": "WILL (confirmar sobrenome)", "context": "Hoje o time do Will não está com tanta demanda de operações, mas ele precisa que o time dele perfome.\nQuando olhamos para 2026 ele precisa preparar o time em processos, conheicmento e negócio", "nextSteps": "", "done": false}, {"id": "m17", "leader": "WILL (confirmar sobrenome)", "context": "O will tá pensando em colocar a Janete no time de Atendimento, para poder receber a Tayane no time de Operações", "nextSteps": "", "done": false}], "leaders": [{"id": "l1", "name": "DIEGO ANDERSON SCHROEDER", "area": "", "cadence": "Mensal"}, {"id": "l2", "name": "MARCEL MELO DA SILVA", "area": "", "cadence": "Mensal"}, {"id": "l3", "name": "HANIEL GARCIA", "area": "", "cadence": "Mensal"}, {"id": "l4", "name": "FIORAVANTE MANFRON", "area": "", "cadence": "Mensal"}, {"id": "l5", "name": "GUSTAVO PEREIRA TRUDES", "area": "", "cadence": "Mensal"}, {"id": "l6", "name": "IVENA VIEIRA AGUIAR", "area": "", "cadence": "Mensal"}, {"id": "l7", "name": "WILL (confirmar sobrenome)", "area": "", "cadence": "Mensal"}, {"id": "l8", "name": "Vinícius Spode", "area": "", "cadence": "Mensal"}, {"id": "l9", "name": "André Justo", "area": "", "cadence": "Mensal"}]};
+
+const TAB_KEYS = ['kanban','leaders','agenda','observacoes','lixeira'];
+const DEFAULT_TAB_ORDER = ['kanban','leaders','agenda','observacoes','lixeira'];
+const KANBAN_STATUS_KEYS = ['not_started','in_progress','done'];
+const DEFAULT_LABELS = {
+  appTitle: 'Agenda BP · nstech',
+  appSubtitle: 'Kanban de demandas + acompanhamento de líderes, em um só lugar',
+  tabs: { kanban:'Kanban', leaders:'Líderes', agenda:'Agenda', observacoes:'Observações', lixeira:'Lixeira' },
+  columns: { not_started:'Não iniciado', in_progress:'Em andamento', done:'Concluído' },
+  backupHint: 'Os dados ficam salvos só neste navegador. Exporte um backup em Excel regularmente.',
+  exportBtn: '⬇ Exportar backup (.xlsx)',
+  importBtn: '⬆ Importar backup'
+};
+function mergeLabels(saved){
+  const l = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+  if(!saved || typeof saved !== 'object') return l;
+  if(typeof saved.appTitle==='string') l.appTitle = saved.appTitle;
+  if(typeof saved.appSubtitle==='string') l.appSubtitle = saved.appSubtitle;
+  if(typeof saved.backupHint==='string') l.backupHint = saved.backupHint;
+  if(typeof saved.exportBtn==='string') l.exportBtn = saved.exportBtn;
+  if(typeof saved.importBtn==='string') l.importBtn = saved.importBtn;
+  if(saved.tabs) TAB_KEYS.forEach(k=>{ if(typeof saved.tabs[k]==='string') l.tabs[k]=saved.tabs[k]; });
+  if(saved.columns) KANBAN_STATUS_KEYS.forEach(k=>{ if(typeof saved.columns[k]==='string') l.columns[k]=saved.columns[k]; });
+  return l;
+}
+const LEGACY_KANBAN_MAP = {'Não iniciado':'not_started','Em andamento':'in_progress','Concluído':'done'};
+function normalizeKanbanValue(v){
+  if(KANBAN_STATUS_KEYS.includes(v)) return v;
+  if(LEGACY_KANBAN_MAP[v]) return LEGACY_KANBAN_MAP[v];
+  return 'not_started';
+}
+
+let state = { tasks: [], meetings: [], leaders: [], observations: [], trash: [], tabOrder: DEFAULT_TAB_ORDER.slice(), labels: DEFAULT_LABELS, tab: 'kanban', activeLeaderId: null, search: '' };
+const uid = (p) => p + Math.random().toString(36).slice(2,9);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const nowISODateTime = () => new Date().toISOString();
+const TRASH_RETENTION_DAYS = 30;
+
+let storageAvailable = true;
+function safeGet(key){
+  try{ return localStorage.getItem(key); }catch(e){ storageAvailable = false; return null; }
+}
+function safeSet(key, val){
+  try{ localStorage.setItem(key, val); return true; }catch(e){ storageAvailable = false; return false; }
+}
+
+async function loadState(){
+  async function getOrSeed(key, seedVal){
+    const raw = safeGet(key);
+    if(raw){
+      try{ return JSON.parse(raw); }catch(e){ /* dado corrompido, cai pro seed */ }
+    }
+    safeSet(key, JSON.stringify(seedVal));
+    return seedVal;
+  }
+  state.tasks = await getOrSeed('bp_tasks', SEED.tasks);
+  state.tasks.forEach(t=>{ t.kanban = normalizeKanbanValue(t.kanban); });
+  state.meetings = await getOrSeed('bp_meetings', SEED.meetings);
+  state.leaders = await getOrSeed('bp_leaders', SEED.leaders);
+  state.leaders.forEach(l=>{ if(typeof l.notes !== 'string') l.notes = ''; });
+  state.observations = await getOrSeed('bp_observations', []);
+  state.trash = await getOrSeed('bp_trash', []);
+  const cutoff = Date.now() - TRASH_RETENTION_DAYS*24*60*60*1000;
+  const before = state.trash.length;
+  state.trash = state.trash.filter(x => new Date(x.deletedAt).getTime() >= cutoff);
+  if(state.trash.length !== before) await persist('bp_trash');
+  const order = await getOrSeed('bp_tab_order', DEFAULT_TAB_ORDER.slice());
+  state.tabOrder = order.filter(k=>TAB_KEYS.includes(k));
+  TAB_KEYS.forEach(k=>{ if(!state.tabOrder.includes(k)) state.tabOrder.push(k); });
+  if(!state.tabOrder.includes(state.tab)) state.tab = state.tabOrder[0];
+  const savedLabels = await getOrSeed('bp_labels', null);
+  state.labels = mergeLabels(savedLabels);
+  if(state.leaders.length) state.activeLeaderId = state.leaders[0].id;
+}
+async function persist(key){
+  const map = {bp_tasks:state.tasks, bp_meetings:state.meetings, bp_leaders:state.leaders, bp_observations:state.observations, bp_trash:state.trash, bp_tab_order:state.tabOrder, bp_labels:state.labels};
+  safeSet(key, JSON.stringify(map[key]));
+}
+
+function moveToTrash(type, payload, label){
+  state.trash.push({ id: uid('x'), type, label, deletedAt: nowISODateTime(), payload });
+}
+
+function deadlineStatus(deadline){
+  if(!deadline) return {cls:'sem-data', label:'Sem data'};
+  const d = new Date(deadline+'T00:00:00');
+  const t = new Date(todayISO()+'T00:00:00');
+  const diff = Math.round((d-t)/86400000);
+  if(diff < 0) return {cls:'atrasado', label:'Atrasado'};
+  if(diff === 0) return {cls:'hoje', label:'Vence hoje'};
+  return {cls:'prazo', label:'No prazo'};
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- RENDER ROOT ---------- */
+function render(){
+  const root = document.getElementById('bp-app');
+  root.innerHTML = `
+    <div class="bp-shell">
+      <div class="bp-header">
+        <div class="bp-title">
+          <div class="bp-corner"></div>
+          <div><h1>${esc(state.labels.appTitle)}</h1><p>${esc(state.labels.appSubtitle)}</p></div>
+        </div>
+        <div class="bp-tabs">
+          ${state.tabOrder.map(k=>`<button class="bp-tab ${state.tab===k?'active':''}" data-tab="${k}">${esc(state.labels.tabs[k])}</button>`).join('')}
+          <button class="bp-tab-reorder" id="bp-labels-btn" title="Editar textos">✎</button>
+          <button class="bp-tab-reorder" id="bp-reorder-btn" title="Reordenar abas">⋮⋮</button>
+        </div>
+      </div>
+      <div class="bp-backup-bar">
+        <span class="bp-backup-hint">${storageAvailable ? esc(state.labels.backupHint) : '⚠ Este navegador está bloqueando o salvamento local — nada será salvo ao fechar a aba. Exporte um backup ao final da sessão.'}</span>
+        <div class="bp-backup-actions">
+          <button class="bp-btn ghost sm" id="bp-export-btn">${esc(state.labels.exportBtn)}</button>
+          <button class="bp-btn ghost sm" id="bp-import-btn">${esc(state.labels.importBtn)}</button>
+          <input type="file" id="bp-import-file" accept=".xlsx,.json" style="display:none;">
+        </div>
+      </div>
+      <div id="bp-view"></div>
+    </div>
+  `;
+  root.querySelectorAll('.bp-tab').forEach(b=>b.addEventListener('click', ()=>{state.tab=b.dataset.tab; render();}));
+  root.querySelector('#bp-labels-btn').addEventListener('click', openLabelsModal);
+  root.querySelector('#bp-reorder-btn').addEventListener('click', openReorderModal);
+  root.querySelector('#bp-export-btn').addEventListener('click', exportBackup);
+  const importInput = root.querySelector('#bp-import-file');
+  root.querySelector('#bp-import-btn').addEventListener('click', ()=>importInput.click());
+  importInput.addEventListener('change', (e)=>{
+    if(e.target.files && e.target.files[0]) importBackupFile(e.target.files[0]);
+  });
+  const view = document.getElementById('bp-view');
+  if(state.tab==='kanban') renderKanban(view);
+  else if(state.tab==='leaders') renderLeaders(view);
+  else if(state.tab==='agenda') renderAgenda(view);
+  else if(state.tab==='observacoes') renderObservacoes(view);
+  else renderLixeira(view);
+}
+
+/* ---------- KANBAN ---------- */
+function renderKanban(view){
+  view.innerHTML = `
+    <div class="bp-toolbar">
+      <input class="bp-search" id="bp-k-search" placeholder="Buscar por título, contexto ou responsável…" value="${esc(state.search)}"/>
+      <button class="bp-btn orange" id="bp-new-task">+ Nova demanda</button>
+    </div>
+    <div class="bp-board" id="bp-board"></div>
+  `;
+  document.getElementById('bp-k-search').addEventListener('input', e=>{state.search=e.target.value; paintBoard();});
+  document.getElementById('bp-new-task').addEventListener('click', ()=>openTaskModal(null));
+  paintBoard();
+
+  function paintBoard(){
+    const cols = [
+      {key:'not_started', accent:'var(--ink-faint)'},
+      {key:'in_progress', accent:'var(--orange)'},
+      {key:'done', accent:'var(--green)'}
+    ];
+    const q = state.search.trim().toLowerCase();
+    const board = document.getElementById('bp-board');
+    board.innerHTML = cols.map(col=>{
+      let items = state.tasks.filter(t=>t.kanban===col.key);
+      if(q) items = items.filter(t => (t.title+' '+t.context+' '+t.owner+' '+t.description).toLowerCase().includes(q));
+      items.sort((a,b)=> (a.deadline||'9999').localeCompare(b.deadline||'9999'));
+      const cardsHtml = items.length ? items.map(t=>{
+        const st = deadlineStatus(t.deadline);
+        return `
+          <div class="bp-card" style="--card-accent:${col.accent}" data-id="${t.id}" draggable="true">
+            <span class="bp-badge ${st.cls}">${st.label}</span>
+            <div class="bp-card-title">${esc(t.title)}</div>
+            <div class="bp-card-context">${esc(t.context||'Sem contexto')}</div>
+            <div class="bp-card-foot">
+              <span class="bp-card-owner">${esc(t.owner||'')}</span>
+              <span class="bp-card-owner">${fmtDate(t.deadline)}</span>
+            </div>
+          </div>`;
+      }).join('') : `<div class="bp-empty">Nenhuma demanda aqui</div>`;
+      return `
+        <div class="bp-col" data-status="${col.key}">
+          <div class="bp-col-head"><h3>${esc(state.labels.columns[col.key])}</h3><span class="bp-count">${items.length}</span></div>
+          <div class="bp-col-drop" data-status="${col.key}">${cardsHtml}</div>
+        </div>`;
+    }).join('');
+
+    let draggedId = null;
+    board.querySelectorAll('.bp-card').forEach(c=>{
+      c.addEventListener('click', ()=>{
+        const t = state.tasks.find(x=>x.id===c.dataset.id);
+        openTaskModal(t);
+      });
+      c.addEventListener('dragstart', e=>{
+        draggedId = c.dataset.id;
+        c.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', c.dataset.id);
+      });
+      c.addEventListener('dragend', ()=>{ c.classList.remove('dragging'); });
+    });
+    board.querySelectorAll('.bp-col-drop').forEach(zone=>{
+      zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.closest('.bp-col').classList.add('drag-over'); });
+      zone.addEventListener('dragleave', ()=>{ zone.closest('.bp-col').classList.remove('drag-over'); });
+      zone.addEventListener('drop', async e=>{
+        e.preventDefault();
+        zone.closest('.bp-col').classList.remove('drag-over');
+        const id = e.dataTransfer.getData('text/plain') || draggedId;
+        const t = state.tasks.find(x=>x.id===id);
+        if(t && t.kanban !== zone.dataset.status){
+          t.kanban = zone.dataset.status;
+          await persist('bp_tasks');
+          paintBoard();
+        }
+      });
+    });
+  }
+}
+
+function openTaskModal(task){
+  const isNew = !task;
+  const t = task || {id:uid('t'), owner:'', context:'', title:'', description:'', deadline:'', kanban:'not_started'};
+  const overlay = document.createElement('div');
+  overlay.className = 'bp-overlay';
+  overlay.innerHTML = `
+    <div class="bp-modal">
+      <h3>${isNew?'Nova demanda':'Editar demanda'}</h3>
+      <div class="bp-field"><label>Ação definitiva (título curto)</label><input id="f-title" value="${esc(t.title)}"/></div>
+      <div class="bp-field"><label>Contexto / Tag (pessoa ou tema relacionado)</label><input id="f-context" value="${esc(t.context)}"/></div>
+      <div class="bp-row2">
+        <div class="bp-field"><label>Responsável</label><input id="f-owner" value="${esc(t.owner)}"/></div>
+        <div class="bp-field"><label>Prazo</label><input id="f-deadline" type="date" value="${t.deadline||''}"/></div>
+      </div>
+      <div class="bp-field"><label>Status (Kanban)</label>
+        <select id="f-kanban">
+          <option value="not_started" ${t.kanban==='not_started'?'selected':''}>${esc(state.labels.columns.not_started)}</option>
+          <option value="in_progress" ${t.kanban==='in_progress'?'selected':''}>${esc(state.labels.columns.in_progress)}</option>
+          <option value="done" ${t.kanban==='done'?'selected':''}>${esc(state.labels.columns.done)}</option>
+        </select>
+      </div>
+      <div class="bp-field"><label>Descrição completa</label><textarea id="f-desc">${esc(t.description)}</textarea></div>
+      <div class="bp-modal-actions">
+        ${isNew?'':'<button class="danger" id="f-del">Excluir</button>'}
+        <button class="bp-btn ghost" id="f-cancel">Cancelar</button>
+        <button class="bp-btn orange" id="f-save">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) document.body.removeChild(overlay); });
+  overlay.querySelector('#f-cancel').addEventListener('click', ()=>document.body.removeChild(overlay));
+  if(!isNew) overlay.querySelector('#f-del').addEventListener('click', async ()=>{
+    state.tasks = state.tasks.filter(x=>x.id!==t.id);
+    moveToTrash('task', t, t.title);
+    await persist('bp_tasks');
+    await persist('bp_trash');
+    document.body.removeChild(overlay); render();
+  });
+  overlay.querySelector('#f-save').addEventListener('click', async ()=>{
+    const upd = {
+      id:t.id,
+      title: overlay.querySelector('#f-title').value.trim() || 'Sem título',
+      context: overlay.querySelector('#f-context').value.trim(),
+      owner: overlay.querySelector('#f-owner').value.trim(),
+      deadline: overlay.querySelector('#f-deadline').value,
+      kanban: overlay.querySelector('#f-kanban').value,
+      description: overlay.querySelector('#f-desc').value.trim()
+    };
+    const idx = state.tasks.findIndex(x=>x.id===t.id);
+    if(idx>=0) state.tasks[idx]=upd; else state.tasks.push(upd);
+    await persist('bp_tasks');
+    document.body.removeChild(overlay); render();
+  });
+}
+
+/* ---------- LEADERS ---------- */
+function renderLeaders(view){
+  const total = state.leaders.length;
+  view.innerHTML = `
+    <div class="bp-toolbar">
+      <input class="bp-search" id="bp-l-search" placeholder="Buscar líder…"/>
+      <button class="bp-btn ghost" id="bp-new-leader">+ Líder</button>
+      <button class="bp-btn orange" id="bp-new-meeting">+ Registrar 1:1</button>
+    </div>
+    ${total<22?`<div class="bp-note">${total} de 22 líderes cadastrados. Os demais não constavam no Excel de origem — adicione conforme for registrando as 1:1s.</div>`:''}
+    <div class="bp-leader-grid">
+      <div class="bp-leader-list" id="bp-leader-list"></div>
+      <div class="bp-leader-panel" id="bp-leader-panel"></div>
+    </div>
+  `;
+  document.getElementById('bp-new-leader').addEventListener('click', ()=>openLeaderModal(null));
+  document.getElementById('bp-new-meeting').addEventListener('click', ()=>openMeetingModal(null, state.activeLeaderId));
+  document.getElementById('bp-l-search').addEventListener('input', e=>paintList(e.target.value.toLowerCase()));
+  paintList('');
+  paintPanel();
+
+  function paintList(q){
+    const list = document.getElementById('bp-leader-list');
+    const items = state.leaders
+      .filter(l=>l.name.toLowerCase().includes(q))
+      .sort((a,b)=>a.name.localeCompare(b.name));
+    list.innerHTML = items.map(l=>{
+      const count = state.meetings.filter(m=>m.leader===l.name).length;
+      return `<div class="bp-leader-item ${l.id===state.activeLeaderId?'active':''}" data-id="${l.id}">
+        <span class="nm">${esc(l.name)}</span><span class="ct">${count}</span>
+      </div>`;
+    }).join('') || `<div class="bp-empty">Nenhum líder encontrado</div>`;
+    list.querySelectorAll('.bp-leader-item').forEach(it=>it.addEventListener('click', ()=>{
+      state.activeLeaderId = it.dataset.id; paintList(q); paintPanel();
+    }));
+  }
+
+  function paintPanel(){
+    const panel = document.getElementById('bp-leader-panel');
+    const leader = state.leaders.find(l=>l.id===state.activeLeaderId);
+    if(!leader){ panel.innerHTML = `<div class="bp-empty">Selecione um líder</div>`; return; }
+    const meetings = state.meetings.filter(m=>m.leader===leader.name)
+      .slice().reverse();
+    const pending = state.tasks.filter(t=> t.kanban!=='done' && (t.context===leader.name || t.owner===leader.name));
+    panel.innerHTML = `
+      <div class="bp-leader-panel-head">
+        <div>
+          <h2>${esc(leader.name)}</h2>
+          <div class="meta">${esc(leader.area||'Área não definida')} · Cadência: ${esc(leader.cadence||'—')}</div>
+        </div>
+        <button class="bp-btn ghost" id="bp-edit-leader">Editar</button>
+      </div>
+      ${leader.notes? `<div class="bp-tl-next" style="margin-bottom:16px;white-space:pre-wrap;"><b>Observações:</b> ${esc(leader.notes)}</div>`:''}
+      ${pending.length? `<div style="margin-bottom:16px;"><div style="font-size:11.5px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px;">Pendências abertas (${pending.length})</div>
+        ${pending.map(t=>{const st=deadlineStatus(t.deadline); return `<div class="bp-agenda-row" data-task="${t.id}"><span class="bp-badge ${st.cls}">${st.label}</span><div class="bp-agenda-main"><div class="t">${esc(t.title)}</div></div></div>`;}).join('')}
+      </div>`:''}
+      <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px;">Histórico de 1:1s</div>
+      <div class="bp-timeline">
+        ${meetings.length ? meetings.map(m=>`
+          <div class="bp-tl-item ${m.done?'done':''}">
+            <div class="bp-tl-card">
+              <p class="bp-tl-context">${esc(m.context)}</p>
+              ${m.nextSteps? `<div class="bp-tl-next"><b>Próximos passos:</b> ${esc(m.nextSteps)}</div>`:''}
+              <div class="bp-tl-foot">
+                <span class="bp-badge ${m.done?'prazo':'hoje'}">${m.done?'Concluído':'Em aberto'}</span>
+                <div class="bp-tl-actions"><button data-edit="${m.id}">editar</button><button data-del="${m.id}">excluir</button></div>
+              </div>
+            </div>
+          </div>`).join('') : '<div class="bp-empty">Nenhuma reunião registrada ainda</div>'}
+      </div>
+    `;
+    panel.querySelector('#bp-edit-leader').addEventListener('click', ()=>openLeaderModal(leader));
+    panel.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>{
+      const m = state.meetings.find(x=>x.id===b.dataset.edit);
+      openMeetingModal(m, leader.id);
+    }));
+    panel.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ()=>{
+      const m = state.meetings.find(x=>x.id===b.dataset.del);
+      state.meetings = state.meetings.filter(x=>x.id!==b.dataset.del);
+      if(m) moveToTrash('meeting', m, `1:1 · ${m.leader}`);
+      await persist('bp_meetings'); await persist('bp_trash'); render();
+    }));
+    panel.querySelectorAll('[data-task]').forEach(row=>row.addEventListener('click', ()=>{
+      const t = state.tasks.find(x=>x.id===row.dataset.task);
+      openTaskModal(t);
+    }));
+  }
+}
+
+function openLeaderModal(leader){
+  const isNew = !leader;
+  const l = leader || {id:uid('l'), name:'', area:'', cadence:'Mensal', notes:''};
+  const overlay = document.createElement('div');
+  overlay.className = 'bp-overlay';
+  overlay.innerHTML = `
+    <div class="bp-modal">
+      <h3>${isNew?'Novo líder':'Editar líder'}</h3>
+      <div class="bp-field"><label>Nome</label><input id="f-name" value="${esc(l.name)}"/></div>
+      <div class="bp-row2">
+        <div class="bp-field"><label>Área / Tribo</label><input id="f-area" value="${esc(l.area)}"/></div>
+        <div class="bp-field"><label>Cadência</label>
+          <select id="f-cad">
+            <option ${l.cadence==='Semanal'?'selected':''}>Semanal</option>
+            <option ${l.cadence==='Quinzenal'?'selected':''}>Quinzenal</option>
+            <option ${l.cadence==='Mensal'?'selected':''}>Mensal</option>
+          </select>
+        </div>
+      </div>
+      <div class="bp-field"><label>Observações</label><textarea id="f-notes" placeholder="Anotações gerais sobre o líder…">${esc(l.notes||'')}</textarea></div>
+      <div class="bp-modal-actions">
+        ${isNew?'':'<button class="danger" id="f-del">Remover líder</button>'}
+        <button class="bp-btn ghost" id="f-cancel">Cancelar</button>
+        <button class="bp-btn orange" id="f-save">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) document.body.removeChild(overlay); });
+  overlay.querySelector('#f-cancel').addEventListener('click', ()=>document.body.removeChild(overlay));
+  if(!isNew) overlay.querySelector('#f-del').addEventListener('click', async ()=>{
+    state.leaders = state.leaders.filter(x=>x.id!==l.id);
+    moveToTrash('leader', l, l.name);
+    if(state.activeLeaderId===l.id) state.activeLeaderId = state.leaders[0]?.id || null;
+    await persist('bp_leaders');
+    await persist('bp_trash');
+    document.body.removeChild(overlay); render();
+  });
+  overlay.querySelector('#f-save').addEventListener('click', async ()=>{
+    const upd = {id:l.id, name:overlay.querySelector('#f-name').value.trim()||'Sem nome', area:overlay.querySelector('#f-area').value.trim(), cadence:overlay.querySelector('#f-cad').value, notes:overlay.querySelector('#f-notes').value.trim()};
+    const idx = state.leaders.findIndex(x=>x.id===l.id);
+    if(idx>=0) state.leaders[idx]=upd; else state.leaders.push(upd);
+    state.activeLeaderId = l.id;
+    await persist('bp_leaders');
+    document.body.removeChild(overlay); render();
+  });
+}
+
+function openMeetingModal(meeting, leaderId){
+  const isNew = !meeting;
+  const m = meeting || {id:uid('m'), leader:'', context:'', nextSteps:'', done:false, date: todayISO()};
+  const leader = state.leaders.find(l=>l.id===leaderId);
+  if(isNew && leader) m.leader = leader.name;
+  const overlay = document.createElement('div');
+  overlay.className = 'bp-overlay';
+  overlay.innerHTML = `
+    <div class="bp-modal">
+      <h3>${isNew?'Registrar 1:1':'Editar registro'}</h3>
+      <div class="bp-field"><label>Líder</label>
+        <select id="f-leader">
+          ${state.leaders.map(l=>`<option value="${esc(l.name)}" ${l.name===m.leader?'selected':''}>${esc(l.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="bp-field"><label>Data</label><input id="f-date" type="date" value="${m.date||todayISO()}"/></div>
+      <div class="bp-field"><label>Contexto / o que foi conversado</label><textarea id="f-context">${esc(m.context)}</textarea></div>
+      <div class="bp-field"><label>Próximos passos / parecer</label><textarea id="f-next">${esc(m.nextSteps)}</textarea></div>
+      <div class="bp-field"><label><input type="checkbox" id="f-done" ${m.done?'checked':''} style="width:auto;margin-right:6px;"/>Concluído</label></div>
+      <div class="bp-modal-actions">
+        ${isNew?'':'<button class="danger" id="f-del">Excluir</button>'}
+        <button class="bp-btn ghost" id="f-cancel">Cancelar</button>
+        <button class="bp-btn orange" id="f-save">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) document.body.removeChild(overlay); });
+  overlay.querySelector('#f-cancel').addEventListener('click', ()=>document.body.removeChild(overlay));
+  if(!isNew) overlay.querySelector('#f-del').addEventListener('click', async ()=>{
+    state.meetings = state.meetings.filter(x=>x.id!==m.id);
+    moveToTrash('meeting', m, `1:1 · ${m.leader}`);
+    await persist('bp_meetings');
+    await persist('bp_trash');
+    document.body.removeChild(overlay); render();
+  });
+  overlay.querySelector('#f-save').addEventListener('click', async ()=>{
+    const upd = {
+      id:m.id,
+      leader: overlay.querySelector('#f-leader').value,
+      date: overlay.querySelector('#f-date').value || todayISO(),
+      context: overlay.querySelector('#f-context').value.trim(),
+      nextSteps: overlay.querySelector('#f-next').value.trim(),
+      done: overlay.querySelector('#f-done').checked
+    };
+    const idx = state.meetings.findIndex(x=>x.id===m.id);
+    if(idx>=0) state.meetings[idx]=upd; else state.meetings.push(upd);
+    await persist('bp_meetings');
+    document.body.removeChild(overlay); render();
+  });
+}
+
+/* ---------- AGENDA ---------- */
+function renderAgenda(view){
+  const today = todayISO();
+  const items = [];
+  state.tasks.filter(t=>t.kanban!=='done' && t.deadline).forEach(t=>{
+    items.push({date:t.deadline, type:'tarefa', title:t.title, sub:t.context, ref:t});
+  });
+  items.sort((a,b)=>a.date.localeCompare(b.date));
+  const atrasado = items.filter(i=>i.date<today);
+  const hoje = items.filter(i=>i.date===today);
+  const proximos = items.filter(i=>i.date>today);
+
+  function group(title, arr){
+    if(!arr.length) return '';
+    return `<div class="bp-agenda-group"><h3>${title} (${arr.length})</h3>
+      ${arr.map(i=>`
+        <div class="bp-agenda-row" data-type="${i.type}" data-id="${i.ref.id}">
+          <span class="bp-agenda-date">${fmtDate(i.date)}</span>
+          <div class="bp-agenda-main"><div class="t">${esc(i.title)}</div><div class="s">${esc(i.sub||'')}</div></div>
+          <span class="bp-tag ${i.type}">${i.type==='tarefa'?'Tarefa':'1:1'}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  view.innerHTML = `
+    <div class="bp-toolbar">
+      <div style="flex:1;font-size:12.5px;color:var(--ink-faint);">Demandas com prazo, direto do Kanban — o que você criar aqui aparece lá, e vice-versa.</div>
+      <button class="bp-btn orange" id="bp-agenda-new-task">+ Nova demanda</button>
+    </div>
+    ${group('Atrasado', atrasado)}
+    ${group('Hoje', hoje)}
+    ${group('Próximos', proximos)}
+    ${!items.length? '<div class="bp-empty">Nada agendado</div>':''}
+  `;
+  view.querySelector('#bp-agenda-new-task').addEventListener('click', ()=>openTaskModal(null));
+  view.querySelectorAll('.bp-agenda-row').forEach(row=>row.addEventListener('click', ()=>{
+    openTaskModal(state.tasks.find(t=>t.id===row.dataset.id));
+  }));
+}
+
+/* ---------- EDITAR TEXTOS ---------- */
+function openLabelsModal(){
+  const l = state.labels;
+  const overlay = document.createElement('div');
+  overlay.className = 'bp-overlay';
+  overlay.innerHTML = `
+    <div class="bp-modal" style="max-width:560px;">
+      <h3>Editar textos</h3>
+      <div class="bp-field"><label>Título do app</label><input id="lb-appTitle" value="${esc(l.appTitle)}"/></div>
+      <div class="bp-field"><label>Subtítulo</label><input id="lb-appSubtitle" value="${esc(l.appSubtitle)}"/></div>
+      <div class="bp-row2">
+        <div class="bp-field"><label>Aba: Kanban</label><input id="lb-tab-kanban" value="${esc(l.tabs.kanban)}"/></div>
+        <div class="bp-field"><label>Aba: Líderes</label><input id="lb-tab-leaders" value="${esc(l.tabs.leaders)}"/></div>
+      </div>
+      <div class="bp-row2">
+        <div class="bp-field"><label>Aba: Agenda</label><input id="lb-tab-agenda" value="${esc(l.tabs.agenda)}"/></div>
+        <div class="bp-field"><label>Aba: Observações</label><input id="lb-tab-observacoes" value="${esc(l.tabs.observacoes)}"/></div>
+      </div>
+      <div class="bp-field"><label>Aba: Lixeira</label><input id="lb-tab-lixeira" value="${esc(l.tabs.lixeira)}"/></div>
+      <div class="bp-row2">
+        <div class="bp-field"><label>Coluna: Não iniciado</label><input id="lb-col-not_started" value="${esc(l.columns.not_started)}"/></div>
+        <div class="bp-field"><label>Coluna: Em andamento</label><input id="lb-col-in_progress" value="${esc(l.columns.in_progress)}"/></div>
+      </div>
+      <div class="bp-field"><label>Coluna: Concluído</label><input id="lb-col-done" value="${esc(l.columns.done)}"/></div>
+      <div class="bp-field"><label>Texto da barra de backup</label><input id="lb-backupHint" value="${esc(l.backupHint)}"/></div>
+      <div class="bp-row2">
+        <div class="bp-field"><label>Botão exportar</label><input id="lb-exportBtn" value="${esc(l.exportBtn)}"/></div>
+        <div class="bp-field"><label>Botão importar</label><input id="lb-importBtn" value="${esc(l.importBtn)}"/></div>
+      </div>
+      <div class="bp-modal-actions">
+        <button class="danger" id="lb-reset">Restaurar padrão</button>
+        <button class="bp-btn ghost" id="lb-cancel">Cancelar</button>
+        <button class="bp-btn orange" id="lb-save">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) document.body.removeChild(overlay); });
+  overlay.querySelector('#lb-cancel').addEventListener('click', ()=>document.body.removeChild(overlay));
+  overlay.querySelector('#lb-reset').addEventListener('click', async ()=>{
+    if(!confirm('Restaurar todos os textos para o padrão original?')) return;
+    state.labels = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+    await persist('bp_labels');
+    document.body.removeChild(overlay); render();
+  });
+  overlay.querySelector('#lb-save').addEventListener('click', async ()=>{
+    const v = id => overlay.querySelector('#'+id).value.trim();
+    state.labels = {
+      appTitle: v('lb-appTitle') || DEFAULT_LABELS.appTitle,
+      appSubtitle: v('lb-appSubtitle'),
+      tabs: {
+        kanban: v('lb-tab-kanban') || DEFAULT_LABELS.tabs.kanban,
+        leaders: v('lb-tab-leaders') || DEFAULT_LABELS.tabs.leaders,
+        agenda: v('lb-tab-agenda') || DEFAULT_LABELS.tabs.agenda,
+        observacoes: v('lb-tab-observacoes') || DEFAULT_LABELS.tabs.observacoes,
+        lixeira: v('lb-tab-lixeira') || DEFAULT_LABELS.tabs.lixeira
+      },
+      columns: {
+        not_started: v('lb-col-not_started') || DEFAULT_LABELS.columns.not_started,
+        in_progress: v('lb-col-in_progress') || DEFAULT_LABELS.columns.in_progress,
+        done: v('lb-col-done') || DEFAULT_LABELS.columns.done
+      },
+      backupHint: v('lb-backupHint'),
+      exportBtn: v('lb-exportBtn') || DEFAULT_LABELS.exportBtn,
+      importBtn: v('lb-importBtn') || DEFAULT_LABELS.importBtn
+    };
+    await persist('bp_labels');
+    document.body.removeChild(overlay); render();
+  });
+}
+
+/* ---------- REORDER TABS ---------- */
+function openReorderModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'bp-overlay';
+  overlay.innerHTML = `
+    <div class="bp-modal">
+      <h3>Reordenar abas</h3>
+      <div id="bp-reorder-list"></div>
+      <div class="bp-modal-actions">
+        <button class="bp-btn orange" id="f-close">Concluído</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeAndRender(); });
+  overlay.querySelector('#f-close').addEventListener('click', closeAndRender);
+  paintReorderList();
+
+  function paintReorderList(){
+    const list = overlay.querySelector('#bp-reorder-list');
+    list.innerHTML = state.tabOrder.map((k,i)=>`
+      <div class="bp-reorder-row">
+        <span class="nm">${i+1}. ${esc(state.labels.tabs[k])}</span>
+        <div class="arrows">
+          <button data-dir="up" data-idx="${i}" ${i===0?'disabled':''}>↑</button>
+          <button data-dir="down" data-idx="${i}" ${i===state.tabOrder.length-1?'disabled':''}>↓</button>
+        </div>
+      </div>`).join('');
+    list.querySelectorAll('button').forEach(b=>b.addEventListener('click', async ()=>{
+      const idx = parseInt(b.dataset.idx,10);
+      const swapWith = b.dataset.dir==='up' ? idx-1 : idx+1;
+      [state.tabOrder[idx], state.tabOrder[swapWith]] = [state.tabOrder[swapWith], state.tabOrder[idx]];
+      await persist('bp_tab_order');
+      paintReorderList();
+    }));
+  }
+  function closeAndRender(){ document.body.removeChild(overlay); render(); }
+}
+
+/* ---------- OBSERVAÇÕES ---------- */
+function renderObservacoes(view){
+  const items = state.observations.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  view.innerHTML = `
+    <div class="bp-toolbar">
+      <div style="flex:1;font-size:12.5px;color:var(--ink-faint);">Registros livres — anotações que não são tarefa nem 1:1</div>
+      <button class="bp-btn orange" id="bp-new-obs">+ Nova observação</button>
+    </div>
+    <div id="bp-obs-list">
+      ${items.length ? items.map(o=>`
+        <div class="bp-obs-card" data-id="${o.id}">
+          <div class="bp-obs-date">${fmtDate(o.date.slice(0,10))}${o.title?' · '+esc(o.title):''}</div>
+          <div class="bp-obs-text">${esc(o.text)}</div>
+        </div>`).join('') : '<div class="bp-empty">Nenhuma observação registrada ainda</div>'}
+    </div>
+  `;
+  view.querySelector('#bp-new-obs').addEventListener('click', ()=>openObservationModal(null));
+  view.querySelectorAll('.bp-obs-card').forEach(c=>c.addEventListener('click', ()=>{
+    openObservationModal(state.observations.find(o=>o.id===c.dataset.id));
+  }));
+}
+
+function openObservationModal(obs){
+  const isNew = !obs;
+  const o = obs || {id:uid('o'), date: nowISODateTime(), title:'', text:''};
+  const overlay = document.createElement('div');
+  overlay.className = 'bp-overlay';
+  overlay.innerHTML = `
+    <div class="bp-modal">
+      <h3>${isNew?'Nova observação':'Editar observação'}</h3>
+      <div class="bp-field"><label>Data</label><input id="f-date" type="date" value="${o.date.slice(0,10)}"/></div>
+      <div class="bp-field"><label>Título (opcional)</label><input id="f-title" value="${esc(o.title)}"/></div>
+      <div class="bp-field"><label>Observação</label><textarea id="f-text" style="min-height:110px;">${esc(o.text)}</textarea></div>
+      <div class="bp-modal-actions">
+        ${isNew?'':'<button class="danger" id="f-del">Excluir</button>'}
+        <button class="bp-btn ghost" id="f-cancel">Cancelar</button>
+        <button class="bp-btn orange" id="f-save">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) document.body.removeChild(overlay); });
+  overlay.querySelector('#f-cancel').addEventListener('click', ()=>document.body.removeChild(overlay));
+  if(!isNew) overlay.querySelector('#f-del').addEventListener('click', async ()=>{
+    state.observations = state.observations.filter(x=>x.id!==o.id);
+    moveToTrash('observation', o, o.title || o.text.slice(0,40));
+    await persist('bp_observations');
+    await persist('bp_trash');
+    document.body.removeChild(overlay); render();
+  });
+  overlay.querySelector('#f-save').addEventListener('click', async ()=>{
+    const dateVal = overlay.querySelector('#f-date').value || todayISO();
+    const upd = {
+      id:o.id,
+      date: dateVal,
+      title: overlay.querySelector('#f-title').value.trim(),
+      text: overlay.querySelector('#f-text').value.trim()
+    };
+    if(!upd.text){ overlay.querySelector('#f-text').focus(); return; }
+    const idx = state.observations.findIndex(x=>x.id===o.id);
+    if(idx>=0) state.observations[idx]=upd; else state.observations.push(upd);
+    await persist('bp_observations');
+    document.body.removeChild(overlay); render();
+  });
+}
+
+/* ---------- LIXEIRA ---------- */
+const TRASH_TYPE_LABEL = {task:'Demanda', meeting:'1:1', leader:'Líder', observation:'Observação'};
+const TRASH_TARGET_ARRAY = {task:'tasks', meeting:'meetings', leader:'leaders', observation:'observations'};
+const TRASH_TARGET_KEY = {task:'bp_tasks', meeting:'bp_meetings', leader:'bp_leaders', observation:'bp_observations'};
+
+function daysLeft(deletedAt){
+  const elapsed = (Date.now() - new Date(deletedAt).getTime())/(24*60*60*1000);
+  return Math.max(0, Math.ceil(TRASH_RETENTION_DAYS - elapsed));
+}
+
+function renderLixeira(view){
+  const items = state.trash.slice().sort((a,b)=>b.deletedAt.localeCompare(a.deletedAt));
+  view.innerHTML = `
+    <div class="bp-toolbar">
+      <div style="flex:1;font-size:12.5px;color:var(--ink-faint);">Itens excluídos ficam aqui por ${TRASH_RETENTION_DAYS} dias antes de serem removidos automaticamente.</div>
+      ${items.length? '<button class="bp-btn ghost" id="bp-empty-trash">Esvaziar lixeira</button>':''}
+    </div>
+    <div id="bp-trash-list">
+      ${items.length ? items.map(x=>`
+        <div class="bp-trash-row" data-id="${x.id}">
+          <span class="bp-trash-type">${TRASH_TYPE_LABEL[x.type]||x.type}</span>
+          <div class="bp-trash-main">
+            <div class="t">${esc(x.label||'(sem título)')}</div>
+            <div class="s">Excluído em ${fmtDate(x.deletedAt.slice(0,10))} · some em ${daysLeft(x.deletedAt)} dia(s)</div>
+          </div>
+          <div class="bp-trash-actions">
+            <button class="bp-btn ghost sm" data-restore="${x.id}">Restaurar</button>
+            <button class="bp-btn ghost sm" data-purge="${x.id}" style="color:var(--red);">Excluir definitivo</button>
+          </div>
+        </div>`).join('') : '<div class="bp-empty">Lixeira vazia</div>'}
+    </div>
+  `;
+  view.querySelectorAll('[data-restore]').forEach(b=>b.addEventListener('click', async ()=>{
+    const entry = state.trash.find(x=>x.id===b.dataset.restore);
+    if(!entry) return;
+    const arrKey = TRASH_TARGET_ARRAY[entry.type];
+    state[arrKey].push(entry.payload);
+    state.trash = state.trash.filter(x=>x.id!==entry.id);
+    await persist(TRASH_TARGET_KEY[entry.type]);
+    await persist('bp_trash');
+    render();
+  }));
+  view.querySelectorAll('[data-purge]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('Excluir definitivamente? Não será possível recuperar este item depois.')) return;
+    state.trash = state.trash.filter(x=>x.id!==b.dataset.purge);
+    await persist('bp_trash');
+    render();
+  }));
+  const emptyBtn = view.querySelector('#bp-empty-trash');
+  if(emptyBtn) emptyBtn.addEventListener('click', async ()=>{
+    if(!confirm(`Excluir definitivamente todos os ${items.length} itens da lixeira?`)) return;
+    state.trash = [];
+    await persist('bp_trash');
+    render();
+  });
+}
+
+/* ---------- BACKUP (exportar / importar em Excel) ---------- */
+const TASK_FIELDS = ['id','title','context','owner','deadline','kanban','description'];
+const MEETING_FIELDS = ['id','leader','date','context','nextSteps','done'];
+const LEADER_FIELDS = ['id','name','area','cadence','notes'];
+const OBS_FIELDS = ['id','date','title','text'];
+const TRASH_FIELDS = ['id','type','label','deletedAt','payload_json'];
+
+function normalizeRows(arr, fields){
+  return (arr||[]).map(o=>{
+    const row={};
+    fields.forEach(f=>{ row[f] = (o[f]===undefined||o[f]===null) ? '' : o[f]; });
+    return row;
+  });
+}
+
+function exportBackup(){
+  if(typeof XLSX === 'undefined'){
+    alert('Não foi possível carregar o gerador de Excel (verifique sua conexão). Vou exportar em JSON como alternativa.');
+    exportBackupJSON();
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(normalizeRows(state.tasks, TASK_FIELDS)), 'Tarefas');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(normalizeRows(state.meetings, MEETING_FIELDS)), 'Reunioes');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(normalizeRows(state.leaders, LEADER_FIELDS)), 'Lideres');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(normalizeRows(state.observations, OBS_FIELDS)), 'Observacoes');
+  const trashRows = (state.trash||[]).map(x=>({id:x.id, type:x.type, label:x.label||'', deletedAt:x.deletedAt, payload_json: JSON.stringify(x.payload)}));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(normalizeRows(trashRows, TRASH_FIELDS)), 'Lixeira');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{exportedAt:new Date().toISOString(), tabOrder: state.tabOrder.join(',')}]), 'Meta');
+  XLSX.writeFile(wb, `agenda_bp_backup_${todayISO()}.xlsx`);
+}
+
+function exportBackupJSON(){
+  const payload = {
+    _tipo: 'agenda_bp_backup', _versao: 1, exportedAt: new Date().toISOString(),
+    tasks: state.tasks, meetings: state.meetings, leaders: state.leaders,
+    observations: state.observations, trash: state.trash, tabOrder: state.tabOrder
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `agenda_bp_backup_${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function coerceBool(v){ return v===true || v==='TRUE' || v==='true' || v===1 || v==='1'; }
+
+async function applyImportedState(parsed){
+  const counts = `${parsed.tasks.length} demandas\n${(parsed.meetings||[]).length} registros de 1:1\n${(parsed.leaders||[]).length} líderes\n${(parsed.observations||[]).length} observações\n${(parsed.trash||[]).length} itens na lixeira`;
+  const when = parsed.exportedAt ? new Date(parsed.exportedAt).toLocaleString('pt-BR') : 'data desconhecida';
+  if(!confirm(`Isto vai substituir todos os dados atuais deste navegador por:\n\n${counts}\n\nBackup de: ${when}\n\nContinuar?`)) return false;
+
+  state.tasks = parsed.tasks;
+  state.tasks.forEach(t=>{ t.kanban = normalizeKanbanValue(t.kanban); });
+  state.meetings = parsed.meetings || [];
+  state.leaders = parsed.leaders || [];
+  state.leaders.forEach(l=>{ if(typeof l.notes !== 'string') l.notes = ''; });
+  state.observations = parsed.observations || [];
+  state.trash = parsed.trash || [];
+  if(Array.isArray(parsed.tabOrder) && parsed.tabOrder.length){
+    state.tabOrder = parsed.tabOrder.filter(k=>TAB_KEYS.includes(k));
+    TAB_KEYS.forEach(k=>{ if(!state.tabOrder.includes(k)) state.tabOrder.push(k); });
+  }
+  await persist('bp_tasks'); await persist('bp_meetings'); await persist('bp_leaders');
+  await persist('bp_observations'); await persist('bp_trash'); await persist('bp_tab_order');
+  state.activeLeaderId = state.leaders.length ? state.leaders[0].id : null;
+  if(!state.tabOrder.includes(state.tab)) state.tab = state.tabOrder[0];
+  render();
+  alert('Backup importado com sucesso.');
+  return true;
+}
+
+function importFromExcel(arrayBuffer){
+  const wb = XLSX.read(arrayBuffer, {type:'array'});
+  if(!wb.Sheets['Tarefas']){
+    alert('Arquivo não parece ser um backup exportado por esta ferramenta (aba "Tarefas" não encontrada).');
+    return;
+  }
+  const sheet = (name)=> wb.Sheets[name] ? XLSX.utils.sheet_to_json(wb.Sheets[name], {defval:''}) : [];
+  const tasks = sheet('Tarefas').map(r=>({id:String(r.id||uid('t')), title:String(r.title||''), context:String(r.context||''), owner:String(r.owner||''), deadline: r.deadline?String(r.deadline):'', kanban:String(r.kanban||'Não iniciado'), description:String(r.description||'')}));
+  const meetings = sheet('Reunioes').map(r=>({id:String(r.id||uid('m')), leader:String(r.leader||''), date:String(r.date||todayISO()), context:String(r.context||''), nextSteps:String(r.nextSteps||''), done:coerceBool(r.done)}));
+  const leaders = sheet('Lideres').map(r=>({id:String(r.id||uid('l')), name:String(r.name||''), area:String(r.area||''), cadence:String(r.cadence||'Mensal'), notes:String(r.notes||'')}));
+  const observations = sheet('Observacoes').map(r=>({id:String(r.id||uid('o')), date:String(r.date||todayISO()), title:String(r.title||''), text:String(r.text||'')}));
+  const trash = sheet('Lixeira').map(r=>{
+    let payload = {};
+    try{ payload = JSON.parse(r.payload_json||'{}'); }catch(e){ payload = {}; }
+    return {id:String(r.id||uid('x')), type:String(r.type||''), label:String(r.label||''), deletedAt:String(r.deletedAt||nowISODateTime()), payload};
+  });
+  const meta = sheet('Meta')[0] || {};
+  applyImportedState({tasks, meetings, leaders, observations, trash, tabOrder: meta.tabOrder ? String(meta.tabOrder).split(',') : null, exportedAt: meta.exportedAt});
+}
+
+function importBackupFile(file){
+  const isJSON = file.name.toLowerCase().endsWith('.json');
+  if(isJSON){
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      let data;
+      try{ data = JSON.parse(e.target.result); }
+      catch(err){ alert('Não foi possível ler o arquivo JSON.'); return; }
+      if(!data || !Array.isArray(data.tasks)){ alert('Arquivo em formato inesperado.'); return; }
+      applyImportedState(data);
+    };
+    reader.readAsText(file, 'utf-8');
+  } else {
+    if(typeof XLSX === 'undefined'){
+      alert('Não foi possível carregar o leitor de Excel (verifique sua conexão com a internet).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e)=> importFromExcel(new Uint8Array(e.target.result));
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+/* ---------- INIT ---------- */
+loadState().then(render);
+})();
+</script>
+
+</body>
+</html>
