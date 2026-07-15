@@ -305,6 +305,7 @@ const DRIVE_FILE_NAME = 'agenda_bp_dados.json';
 let driveAuth = { token: null, expiresAt: 0, fileId: null, email: null, picture: null, syncing: false, lastSyncAt: null, connected: false, tokenClient: null };
 let suppressDrivePush = false;
 let syncDebounceTimer = null;
+let tokenRenewTimer = null;
 
 let storageAvailable = true;
 function safeGet(key){
@@ -1315,6 +1316,22 @@ function initGoogleAuth(){
   });
 }
 
+function scheduleTokenRenewal(){
+  clearTimeout(tokenRenewTimer);
+  // Renova 5 minutos antes do token expirar, silenciosamente, sem pedir nada ao usuário.
+  const msUntilRenew = Math.max(driveAuth.expiresAt - Date.now() - 5*60*1000, 15000);
+  tokenRenewTimer = setTimeout(async ()=>{
+    try{
+      await requestAccessToken(false);
+      // sucesso: scheduleTokenRenewal já foi re-agendado dentro do requestAccessToken
+    }catch(e){
+      console.warn('Não foi possível renovar a sessão do Google automaticamente.', e);
+      driveAuth.connected = false;
+      render();
+    }
+  }, msUntilRenew);
+}
+
 function requestAccessToken(interactive){
   return new Promise((resolve, reject)=>{
     if(!driveAuth.tokenClient){ reject(new Error('Login do Google indisponível.')); return; }
@@ -1322,6 +1339,7 @@ function requestAccessToken(interactive){
       if(resp.error){ reject(resp); return; }
       driveAuth.token = resp.access_token;
       driveAuth.expiresAt = Date.now() + (Number(resp.expires_in||3600) * 1000);
+      scheduleTokenRenewal();
       resolve(resp.access_token);
     };
     driveAuth.tokenClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
@@ -1447,6 +1465,17 @@ async function pushToDrive(){
     driveAuth.lastSyncAt = new Date().toISOString();
   }catch(e){
     console.error('Falha ao sincronizar com o Drive', e);
+    if(!driveAuth.token){
+      // Sessão expirou no meio do caminho: tenta renovar sozinho uma vez antes de desistir.
+      try{
+        await requestAccessToken(false);
+        await driveUpdateFile(driveAuth.fileId, buildSyncPayload());
+        driveAuth.lastSyncAt = new Date().toISOString();
+      }catch(e2){
+        driveAuth.connected = false;
+        render();
+      }
+    }
   } finally {
     driveAuth.syncing = false;
     updateSyncBadge();
@@ -1502,6 +1531,7 @@ async function handleGoogleLogin(){
 }
 
 function handleGoogleLogout(){
+  clearTimeout(tokenRenewTimer);
   if(driveAuth.token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2){
     try{ google.accounts.oauth2.revoke(driveAuth.token, ()=>{}); }catch(e){}
   }
