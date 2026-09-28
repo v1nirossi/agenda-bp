@@ -74,6 +74,11 @@
 }
 .bp-backup-hint{font-size:11.5px;color:var(--orange-dark);}
 .bp-backup-actions{display:flex;gap:8px;flex:none;}
+.bp-save-state{display:flex;align-items:center;gap:9px;padding:10px 14px;margin:-4px 0 16px;border:1px solid #D1DFD7;background:#F0F8F2;border-radius:11px;color:#28543A;font-size:12px;font-weight:600;}
+.bp-save-state.warn{background:#FFF6E9;border-color:#F2D7A4;color:#81531A;}
+.bp-save-state.error{background:#FFF0EF;border-color:#E8B8B5;color:#A42F2F;}
+.bp-save-state span{flex:1;}
+.bp-save-state button{border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font-weight:700;}
 .bp-btn.sm{padding:6px 11px;font-size:12px;background:#fff;}
 .bp-tab-reorder{
   border:none;background:transparent;color:var(--ink-faint);cursor:pointer;
@@ -250,7 +255,7 @@
 <script>
 (function(){
 
-const SEED = {"tasks": [{"id": "t1", "owner": "Vinícius Rossi", "context": "José Agnaldo", "title": "falar sobre José Agnaldo", "description": "Caso do José Agnaldo, verificar a que pé andas. Afastado pelo INSS, pega o time da Salu e segurança do trabalho. Quando a pessoa volta ela precisa passar por uma perícia médica, e uma vez que o inss fala apto isso vai para a segurança do trabalho e depois vai para a salu e eles nos retornam quando ele volta. Chamar a Simone, qual o circuito, quando ela pega, oq ela precisa fazer, quais as áreas que passam e como que funciona, quero construir esse mapa e como a gente fica sabendo..", "deadline": "2026-07-01", "kanban": "Em andamento"}, {"id": "t2", "owner": "Vinícius Rossi", "context": "Vinícius Spode", "title": "Time comercial, Jeison. Trocar ideia", "description": "Chamar Spode para conversar sobre Jeison, time comercial e tudo mais. Antes de acionar outra área, classificar a demanda: é urgente de verdade ou urgente para mim?\n\nTreinar a abertura de pedidos com contexto e prazo flexível - não apenas urgência;\n\nPraticar aceitar \"espera\" como resposta válida e negociar prazos;\n \nSubstituir \"críticas\" a outros setores por perguntas: \"Como posso ajudar a agilizar isso?\"", "deadline": "2026-07-07", "kanban": "Não iniciado"}, {"id": "t3", "owner": "Vinícius Rossi", "context": "Vinícius Rossi", "title": "Desequiparação salarial área tech", "description": "Criar comparativo de cargos e salários sobre toda a área tech para analisar desequiparação", "deadline": "2026-07-01", "kanban": "Não iniciado"}, {"id": "t4", "owner": "Vinícius Rossi", "context": "Passar esse contexto para a Bia. Calita está por dentro", "title": "End User Chapecó", "description": "Pegar o contexto do enduser de chapecó time do blanco, pegar com a calita e repassar para o gui esse contexto..", "deadline": "2026-06-22", "kanban": "Não iniciado"}, {"id": "t5", "owner": "Vinícius Rossi", "context": "André Justo", "title": "Desligamento funcionário do André Justo", "description": "Desligamento Leonardo Lima Regassio - Funcionário do André Justo", "deadline": "2026-07-01", "kanban": "Em andamento"}, {"id": "t6", "owner": "Vinícius Rossi", "context": "Vinícius Rossi", "title": "Aniversariantes do mês", "description": "Mandar na agenda aniversariantes do mês e fazer pedido", "deadline": "2026-07-15", "kanban": "Não iniciado"}, {"id": "t7", "owner": "Vinícius Rossi", "context": "André Justo/Leonardo Lima", "title": "Desligamento do Leonardo Lima ou Realocação", "description": "Leonardo Lima, funcionário do André Justo será mantido até 30/07", "deadline": "2026-07-27", "kanban": "Em andamento"}], "meetings": [{"id": "m1", "leader": "DIEGO ANDERSON SCHROEDER", "context": "Realizamos um desligamento o qual o colaborador Rafael Andrade da Silva comentou que não tinha recebido um feedback estruturado.", "nextSteps": "Criar um mapeamento com o Diego e uma rotina de acompanhamento proximal com os casos mais críticos do time dele, definindo periodicidade e quais são os pontos de melhoria", "done": false}, {"id": "m2", "leader": "MARCEL MELO DA SILVA", "context": "Quer dar o mérito para a Ivena", "nextSteps": "05/08 Tabata submeteu no comitê de aprovação de 15% de mérito", "done": false}, {"id": "m3", "leader": "HANIEL GARCIA", "context": "Quer abrir uma susbtituição do Daniel Zanoni que saiu no ano passado", "nextSteps": "Tabata retornou 05/08/2025 que não é possível pois o ID já foi utilizado", "done": true}, {"id": "m4", "leader": "FIORAVANTE MANFRON", "context": "Quando for mudar o Ivan Ribeiro de Jesus precisamos trazer no histórico de que é adequação de cargo e atividades", "nextSteps": "", "done": true}, {"id": "m5", "leader": "FIORAVANTE MANFRON", "context": "Precisamos desligar o José do ID que o Heder irá utilizar", "nextSteps": "", "done": true}, {"id": "m6", "leader": "FIORAVANTE MANFRON", "context": "Nós teremos o desligamento de uma pessoa Alan. Mas ele não tem conseguido performar com as pessoas.\nTem um feedback com ele na semana que vem (08/09).  Da parte do Fioravante não há duvidas da permanencia do Alan", "nextSteps": "", "done": false}, {"id": "m7", "leader": "FIORAVANTE MANFRON", "context": "Hoje o Fiora tem um padrão de treinamento inicial para novas pessoas. Será que não conseguimos", "nextSteps": "Entender melhor como é esse onboarding", "done": false}, {"id": "m8", "leader": "GUSTAVO PEREIRA TRUDES", "context": "Vai me mandar acesso a página", "nextSteps": "", "done": false}, {"id": "m9", "leader": "GUSTAVO PEREIRA TRUDES", "context": "Heder tem uma série de vídeos feitos para o Adriano", "nextSteps": "", "done": false}, {"id": "m10", "leader": "GUSTAVO PEREIRA TRUDES", "context": "Trouxe demanda de transferir o MAICOL WEIS", "nextSteps": "", "done": false}, {"id": "m11", "leader": "GUSTAVO PEREIRA TRUDES", "context": "PEDRO PAULO VASCONCELOS CHAVES - Hoje ele está como Analista de Requisitos, mas atua como PO", "nextSteps": "", "done": false}, {"id": "m12", "leader": "IVENA VIEIRA AGUIAR", "context": "Hoje tem percebido que tá com dificuldade com a falta de organização (processos não bem documentados).\nO time ficou 20 dias sem fazer rituais de documentação", "nextSteps": "Hoje a Ivena acaba tendo um dia a dia muito operacional devido ao seu perfil + voltado ao controle", "done": false}, {"id": "m13", "leader": "IVENA VIEIRA AGUIAR", "context": "Hoje ela precisa provar que o time tá fazendo sentido (devido ao investimento feito para esse time)", "nextSteps": "", "done": false}, {"id": "m14", "leader": "IVENA VIEIRA AGUIAR", "context": "Ela vai marcar 1:1 com novos entrantes\nGUI> será que não faz sentido criarmos uma FAQ das principais dificuldades", "nextSteps": "", "done": false}, {"id": "m15", "leader": "IVENA VIEIRA AGUIAR", "context": "Ela não tem conhecimento de um Hub Spot", "nextSteps": "", "done": false}, {"id": "m16", "leader": "WILL (confirmar sobrenome)", "context": "Hoje o time do Will não está com tanta demanda de operações, mas ele precisa que o time dele perfome.\nQuando olhamos para 2026 ele precisa preparar o time em processos, conheicmento e negócio", "nextSteps": "", "done": false}, {"id": "m17", "leader": "WILL (confirmar sobrenome)", "context": "O will tá pensando em colocar a Janete no time de Atendimento, para poder receber a Tayane no time de Operações", "nextSteps": "", "done": false}], "leaders": [{"id": "l1", "name": "DIEGO ANDERSON SCHROEDER", "area": "", "cadence": "Mensal"}, {"id": "l2", "name": "MARCEL MELO DA SILVA", "area": "", "cadence": "Mensal"}, {"id": "l3", "name": "HANIEL GARCIA", "area": "", "cadence": "Mensal"}, {"id": "l4", "name": "FIORAVANTE MANFRON", "area": "", "cadence": "Mensal"}, {"id": "l5", "name": "GUSTAVO PEREIRA TRUDES", "area": "", "cadence": "Mensal"}, {"id": "l6", "name": "IVENA VIEIRA AGUIAR", "area": "", "cadence": "Mensal"}, {"id": "l7", "name": "WILL (confirmar sobrenome)", "area": "", "cadence": "Mensal"}, {"id": "l8", "name": "Vinícius Spode", "area": "", "cadence": "Mensal"}, {"id": "l9", "name": "André Justo", "area": "", "cadence": "Mensal"}]};
+const SEED = {tasks:[], meetings:[], leaders:[]};
 
 const TAB_KEYS = ['kanban','leaders','agenda','observacoes','lixeira'];
 const DEFAULT_TAB_ORDER = ['kanban','leaders','agenda','observacoes','lixeira'];
@@ -295,7 +300,10 @@ function syncAreasFromLeaders(){
 
 let state = { tasks: [], meetings: [], leaders: [], observations: [], trash: [], areas: [], tabOrder: DEFAULT_TAB_ORDER.slice(), labels: DEFAULT_LABELS, tab: 'kanban', activeLeaderId: null, search: '', backupBarCollapsed: false };
 const uid = (p) => p + Math.random().toString(36).slice(2,9);
-const todayISO = () => new Date().toISOString().slice(0,10);
+const todayISO = () => {
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
 const nowISODateTime = () => new Date().toISOString();
 const TRASH_RETENTION_DAYS = 30;
 
@@ -308,6 +316,12 @@ let syncDebounceTimer = null;
 let tokenRenewTimer = null;
 
 let storageAvailable = true;
+let localSaveError = false;
+let localRevision = 0;
+let syncedRevision = 0;
+let pushInFlight = false;
+let hasLocalChanges = false;
+const DATA_KEYS = ['bp_tasks','bp_meetings','bp_leaders','bp_observations','bp_trash','bp_tab_order','bp_labels','bp_areas'];
 function safeGet(key){
   try{ return localStorage.getItem(key); }catch(e){ storageAvailable = false; return null; }
 }
@@ -344,12 +358,41 @@ async function loadState(){
   const savedLabels = await getOrSeed('bp_labels', null);
   state.labels = mergeLabels(savedLabels);
   state.backupBarCollapsed = safeGet('bp_backup_bar_collapsed') === '1';
+  hasLocalChanges = safeGet('bp_unsynced') === '1';
   if(state.leaders.length) state.activeLeaderId = state.leaders[0].id;
 }
 async function persist(key){
   const map = {bp_tasks:state.tasks, bp_meetings:state.meetings, bp_leaders:state.leaders, bp_observations:state.observations, bp_trash:state.trash, bp_tab_order:state.tabOrder, bp_labels:state.labels, bp_areas:state.areas};
-  safeSet(key, JSON.stringify(map[key]));
-  if(!suppressDrivePush) schedulePush();
+  if(!safeSet(key, JSON.stringify(map[key]))){
+    localSaveError = true;
+    updateSaveState();
+    alert('Não foi possível salvar neste navegador. Exporte um backup JSON agora e não feche esta página antes disso.');
+    return false;
+  }
+  localSaveError = false;
+  if(!suppressDrivePush){
+    localRevision++;
+    hasLocalChanges = true;
+    safeSet('bp_unsynced','1');
+    safeSet('bp_last_change',nowISODateTime());
+    schedulePush();
+  }
+  updateSaveState();
+  return true;
+}
+function saveStateLabel(){
+  if(localSaveError || !storageAvailable) return 'Falha no salvamento local. Exporte um backup JSON antes de sair.';
+  if(!driveAuth.connected) return 'Salvo neste navegador · Google Drive desconectado. Exporte um backup para evitar perdas.';
+  if(pushInFlight || driveAuth.syncing) return 'Salvo neste navegador · sincronizando com o Google Drive…';
+  if(hasLocalChanges) return 'Salvo neste navegador · ainda não confirmado no Google Drive.';
+  return 'Salvo neste navegador e sincronizado com o Google Drive.';
+}
+function updateSaveState(){
+  const el=document.getElementById('bp-save-state');
+  if(!el) return;
+  el.className='bp-save-state'+(localSaveError?' error':hasLocalChanges||!driveAuth.connected?' warn':'');
+  const label=el.querySelector('span');
+  if(label) label.textContent=saveStateLabel();
 }
 
 function moveToTrash(type, payload, label){
@@ -409,11 +452,13 @@ function render(){
           <div class="bp-backup-hint" id="bp-last-export" style="margin-top:2px;">${lastExportLabel()}</div>
         </div>
         <div class="bp-backup-actions">
+          <button class="bp-btn ghost sm" id="bp-export-json" title="Cópia completa, incluindo áreas e personalizações">⬇ Backup completo (.json)</button>
           <button class="bp-btn ghost sm" id="bp-export-btn">${esc(state.labels.exportBtn)}</button>
           <button class="bp-btn ghost sm" id="bp-import-btn">${esc(state.labels.importBtn)}</button>
           <input type="file" id="bp-import-file" accept=".xlsx,.json" style="display:none;">
         </div>
       </div>`}
+      <div class="bp-save-state" id="bp-save-state" role="status" aria-live="polite"><span></span><button id="bp-retry-sync" type="button">Tentar sincronizar</button></div>
       <div id="bp-view"></div>
     </div>
   `;
@@ -426,6 +471,7 @@ function render(){
   if(logoutBtn) logoutBtn.addEventListener('click', handleGoogleLogout);
   const exportBtn = root.querySelector('#bp-export-btn');
   if(exportBtn) exportBtn.addEventListener('click', exportBackup);
+  root.querySelector('#bp-export-json')?.addEventListener('click', exportBackupJSON);
   const importInput = root.querySelector('#bp-import-file');
   const importBtn = root.querySelector('#bp-import-btn');
   if(importBtn && importInput){
@@ -438,6 +484,10 @@ function render(){
     state.backupBarCollapsed = !state.backupBarCollapsed;
     safeSet('bp_backup_bar_collapsed', state.backupBarCollapsed ? '1' : '0');
     render();
+  });
+  root.querySelector('#bp-retry-sync').addEventListener('click', ()=>{
+    if(!driveAuth.connected){ accountPop.style.display='block'; return; }
+    schedulePush(0);
   });
   const accountBtn = root.querySelector('#bp-account-btn');
   const accountPop = root.querySelector('#bp-account-pop');
@@ -455,6 +505,7 @@ function render(){
   else if(state.tab==='agenda') renderAgenda(view);
   else if(state.tab==='observacoes') renderObservacoes(view);
   else renderLixeira(view);
+  updateSaveState();
 }
 
 /* ---------- KANBAN ---------- */
@@ -534,9 +585,9 @@ function renderKanban(view){
   }
 }
 
-function openTaskModal(task){
+function openTaskModal(task, fromMeeting){
   const isNew = !task;
-  const t = task || {id:uid('t'), owner:'', context:'', title:'', description:'', deadline:'', kanban:'not_started'};
+  const t = task || {id:uid('t'), owner:'Vinícius Rossi', context:fromMeeting?.leader||'', title:fromMeeting?.nextSteps||'', description:fromMeeting?.context||'', deadline:'', kanban:'not_started', meetingId:fromMeeting?.id||''};
   const overlay = document.createElement('div');
   overlay.className = 'bp-overlay';
   overlay.innerHTML = `
@@ -582,9 +633,10 @@ function openTaskModal(task){
       kanban: overlay.querySelector('#f-kanban').value,
       description: overlay.querySelector('#f-desc').value.trim()
     };
+    if(t.meetingId) upd.meetingId=t.meetingId;
     const idx = state.tasks.findIndex(x=>x.id===t.id);
     if(idx>=0) state.tasks[idx]=upd; else state.tasks.push(upd);
-    await persist('bp_tasks');
+    if(!await persist('bp_tasks')) return;
     document.body.removeChild(overlay); render();
   });
 }
@@ -754,7 +806,8 @@ function renderLeaders(view){
     if(!leader){ panel.innerHTML = `<div class="bp-empty">Selecione um líder</div>`; return; }
     const meetings = state.meetings.filter(m=>m.leader===leader.name)
       .slice().reverse();
-    const pending = state.tasks.filter(t=> t.kanban!=='done' && (t.context===leader.name || t.owner===leader.name));
+    const meetingIds=new Set(meetings.map(m=>m.id));
+    const pending = state.tasks.filter(t=> t.kanban!=='done' && (t.context===leader.name || t.owner===leader.name || meetingIds.has(t.meetingId)));
     panel.innerHTML = `
       <div class="bp-leader-panel-head">
         <div>
@@ -776,13 +829,17 @@ function renderLeaders(view){
               ${m.nextSteps? `<div class="bp-tl-next"><b>Próximos passos:</b> ${esc(m.nextSteps)}</div>`:''}
               <div class="bp-tl-foot">
                 <span class="bp-badge ${m.done?'prazo':'hoje'}">${m.done?'Concluído':'Em aberto'}</span>
-                <div class="bp-tl-actions"><button data-edit="${m.id}">editar</button><button data-del="${m.id}">excluir</button></div>
+                <div class="bp-tl-actions"><button data-create-task="${m.id}">+ demanda</button><button data-edit="${m.id}">editar</button><button data-del="${m.id}">excluir</button></div>
               </div>
             </div>
           </div>`).join('') : '<div class="bp-empty">Nenhuma reunião registrada ainda</div>'}
       </div>
     `;
     panel.querySelector('#bp-edit-leader').addEventListener('click', ()=>openLeaderModal(leader));
+    panel.querySelectorAll('[data-create-task]').forEach(b=>b.addEventListener('click', ()=>{
+      const m=state.meetings.find(x=>x.id===b.dataset.createTask);
+      if(m) openTaskModal(null,m);
+    }));
     panel.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>{
       const m = state.meetings.find(x=>x.id===b.dataset.edit);
       openMeetingModal(m, leader.id);
@@ -1171,7 +1228,7 @@ function renderLixeira(view){
 }
 
 /* ---------- BACKUP (exportar / importar em Excel) ---------- */
-const TASK_FIELDS = ['id','title','context','owner','deadline','kanban','description'];
+const TASK_FIELDS = ['id','title','context','owner','deadline','kanban','description','meetingId'];
 const MEETING_FIELDS = ['id','leader','date','context','nextSteps','done'];
 const LEADER_FIELDS = ['id','name','area','cadence','notes'];
 const OBS_FIELDS = ['id','date','title','text'];
@@ -1220,7 +1277,8 @@ function exportBackupJSON(){
   const payload = {
     _tipo: 'agenda_bp_backup', _versao: 1, exportedAt: new Date().toISOString(),
     tasks: state.tasks, meetings: state.meetings, leaders: state.leaders,
-    observations: state.observations, trash: state.trash, tabOrder: state.tabOrder
+    observations: state.observations, trash: state.trash, tabOrder: state.tabOrder,
+    areas: state.areas, labels: state.labels
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1253,6 +1311,7 @@ async function applyImportedState(parsed){
   }
   await persist('bp_tasks'); await persist('bp_meetings'); await persist('bp_leaders');
   await persist('bp_observations'); await persist('bp_trash'); await persist('bp_tab_order'); await persist('bp_areas');
+  if(parsed.labels){ state.labels=mergeLabels(parsed.labels); await persist('bp_labels'); }
   state.activeLeaderId = state.leaders.length ? state.leaders[0].id : null;
   if(!state.tabOrder.includes(state.tab)) state.tab = state.tabOrder[0];
   render();
@@ -1267,7 +1326,7 @@ function importFromExcel(arrayBuffer){
     return;
   }
   const sheet = (name)=> wb.Sheets[name] ? XLSX.utils.sheet_to_json(wb.Sheets[name], {defval:''}) : [];
-  const tasks = sheet('Tarefas').map(r=>({id:String(r.id||uid('t')), title:String(r.title||''), context:String(r.context||''), owner:String(r.owner||''), deadline: r.deadline?String(r.deadline):'', kanban:String(r.kanban||'Não iniciado'), description:String(r.description||'')}));
+  const tasks = sheet('Tarefas').map(r=>({id:String(r.id||uid('t')), title:String(r.title||''), context:String(r.context||''), owner:String(r.owner||''), deadline: r.deadline?String(r.deadline):'', kanban:String(r.kanban||'Não iniciado'), description:String(r.description||''), meetingId:String(r.meetingId||'')}));
   const meetings = sheet('Reunioes').map(r=>({id:String(r.id||uid('m')), leader:String(r.leader||''), date:String(r.date||todayISO()), context:String(r.context||''), nextSteps:String(r.nextSteps||''), done:coerceBool(r.done)}));
   const leaders = sheet('Lideres').map(r=>({id:String(r.id||uid('l')), name:String(r.name||''), area:String(r.area||''), cadence:String(r.cadence||'Mensal'), notes:String(r.notes||'')}));
   const observations = sheet('Observacoes').map(r=>({id:String(r.id||uid('o')), date:String(r.date||todayISO()), title:String(r.title||''), text:String(r.text||'')}));
@@ -1416,6 +1475,7 @@ function buildSyncPayload(){
 async function applyDriveState(remote){
   if(!remote || !Array.isArray(remote.tasks)) return;
   suppressDrivePush = true;
+  try{
   state.tasks = remote.tasks;
   state.tasks.forEach(t=>{ t.kanban = normalizeKanbanValue(t.kanban); });
   state.meetings = remote.meetings || [];
@@ -1434,7 +1494,9 @@ async function applyDriveState(remote){
   await persist('bp_observations'); await persist('bp_trash'); await persist('bp_tab_order'); await persist('bp_labels'); await persist('bp_areas');
   state.activeLeaderId = state.leaders.length ? state.leaders[0].id : null;
   if(!state.tabOrder.includes(state.tab)) state.tab = state.tabOrder[0];
-  suppressDrivePush = false;
+  hasLocalChanges=false;
+  safeSet('bp_unsynced','0');
+  }finally{ suppressDrivePush = false; }
 }
 
 async function driveInitialSync(){
@@ -1442,27 +1504,46 @@ async function driveInitialSync(){
   if(file){
     driveAuth.fileId = file.id;
     const remote = await driveReadFile(file.id);
-    await applyDriveState(remote);
+    if(!remote || !Array.isArray(remote.tasks)) throw new Error('O arquivo do Drive não pôde ser lido. A cópia local foi preservada.');
+    const local=buildSyncPayload();
+    const fields=['tasks','meetings','leaders','observations','trash','tabOrder','labels','areas'];
+    const same=fields.every(k=>JSON.stringify(local[k])===JSON.stringify(remote[k]));
+    if(same){ hasLocalChanges=false; safeSet('bp_unsynced','0'); }
+    if(!same){
+      const remoteDate=remote.syncedAt ? new Date(remote.syncedAt).toLocaleString('pt-BR') : 'data desconhecida';
+      const localDate=safeGet('bp_last_change');
+      const message=`Há dados diferentes neste navegador e no Google Drive.\n\nDrive: ${remoteDate}\nAlteração local: ${localDate ? new Date(localDate).toLocaleString('pt-BR') : 'data desconhecida'}\n\nOK: usar a cópia do Drive neste navegador.\nCancelar: manter este navegador e enviar sua cópia ao Drive.\n\nAntes de escolher, recomendamos exportar um backup completo JSON.`;
+      if(confirm(message)) await applyDriveState(remote);
+      else { await pushToDrive(); }
+    }
   } else {
     const created = await driveCreateFile(buildSyncPayload());
     driveAuth.fileId = created.id;
+    hasLocalChanges=false;
+    safeSet('bp_unsynced','0');
   }
   driveAuth.lastSyncAt = new Date().toISOString();
+  updateSaveState();
+  render();
 }
 
-function schedulePush(){
+function schedulePush(delay=300){
   if(!driveAuth.token || !driveAuth.fileId) return;
   clearTimeout(syncDebounceTimer);
-  syncDebounceTimer = setTimeout(pushToDrive, 900);
+  syncDebounceTimer = setTimeout(pushToDrive, delay);
 }
 
 async function pushToDrive(){
   if(!driveAuth.token || !driveAuth.fileId) return;
+  if(pushInFlight){ return; }
+  pushInFlight=true;
+  const revision=localRevision;
   driveAuth.syncing = true;
-  updateSyncBadge();
+  updateSaveState();
   try{
     await driveUpdateFile(driveAuth.fileId, buildSyncPayload());
     driveAuth.lastSyncAt = new Date().toISOString();
+    if(revision===localRevision){hasLocalChanges=false;safeSet('bp_unsynced','0');syncedRevision=revision;}
   }catch(e){
     console.error('Falha ao sincronizar com o Drive', e);
     if(!driveAuth.token){
@@ -1471,14 +1552,18 @@ async function pushToDrive(){
         await requestAccessToken(false);
         await driveUpdateFile(driveAuth.fileId, buildSyncPayload());
         driveAuth.lastSyncAt = new Date().toISOString();
+        if(revision===localRevision){hasLocalChanges=false;safeSet('bp_unsynced','0');syncedRevision=revision;}
       }catch(e2){
         driveAuth.connected = false;
         render();
       }
     }
   } finally {
+    pushInFlight=false;
     driveAuth.syncing = false;
     updateSyncBadge();
+    updateSaveState();
+    if(driveAuth.connected && hasLocalChanges && localRevision!==revision) schedulePush(0);
   }
 }
 
@@ -1540,6 +1625,12 @@ function handleGoogleLogout(){
 }
 
 /* ---------- INIT ---------- */
+window.addEventListener('beforeunload', (event)=>{
+  if(driveAuth.connected && hasLocalChanges){
+    event.preventDefault();
+    event.returnValue='';
+  }
+});
 initGoogleAuth();
 loadState().then(render).then(()=>{ attemptSilentLogin(); });
 })();
